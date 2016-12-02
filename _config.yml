@@ -2,21 +2,21 @@
 title: Your Blog
 SEOTitle: 你的博客 | Your Blog
 header-img: img/home-bg.jpg
-email: huxpro@gmail.com
+email: jmyue@hotmail.com
 description: ""
 keyword: ""
-url: "http://huangxuan.me"              # your host, for absolute URL
-baseurl: "/huxblog-boilerplate"         # for example, '/blog' if your blog hosted on 'host/blog'
+url: ""              # your host, for absolute URL
+baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
 
 # SNS settings
 RSS: false
-weibo_username:     huxpro
-zhihu_username:     huxpro
-github_username:    huxpro
-#twitter_username:  huxpro
-facebook_username:  huxpro
+weibo_username:     robin
+zhihu_username:     robin
+github_username:    robin
+#twitter_username:  robin
+facebook_username:  robin
 
 
 
