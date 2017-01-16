@@ -1,0 +1,124 @@
+---
+layout:     post
+title:      "NATS消息系统"
+subtitle:   "开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统"
+date:       2017-01-15
+author:     "Robin"
+header-img: "img/in-post/nats/nats.jpg"
+tags:
+    - NATS
+    - Message
+---
+
+## Catagory
+
+1. [概述](#概述)
+	1. [简介](#简介)
+	2. [优势](#优势)
+	3. [优势](#优势)
+2. [NATS Messaging](#nats-messaging)
+	1. [Subscriber处理消息模式](#Subscriber处理消息模式)
+	2. [消息模式](#消息模式)
+3. [NATS Protocol](#nats-protocol)
+	1. [协议约定](#协议约定)
+	2. [协议操作](#协议操作)
+
+## 概述
+NATS是一个开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统。NATS服务器是Golang语言开发，客户端由官方和社区提供了10多种语言的客户端。
+
+#### 简介
+**NATS设计目标：**
+* 高性能（fast）
+* 高可用（dial tone）
+* 轻量级（small footprint）
+* 支持多种QoS（at-least-once/at-most-once）
+* 支持多种消息通信模型和用例场景（flexible）
+
+#### 优势和劣势
+
+**优势**
+* 纯发布/订阅
+* 集群式服务器
+* 自动修剪订阅者
+* 基于文本的协议
+
+**劣势（不提供）**
+* 持久化
+* 事务处理
+
+## NATS Messaging
+NATS通讯原理：Publisher编码并发送消息；一个或多个Subscriber接收、解码并处理消息。
+
+#### Subscriber处理消息模式
+* Asynchronous
+
+通过注册handler来接收和处理消息。当收到消息时，会自动触发handler。这种消息处理模式不会被阻塞，可以同时执行其他任务。
+
+* Synchronous
+
+通过显示调用方法来接收和处理消息。这种消息处理模式会被阻塞，会暂停任务直到收到新的消息。Synchronous模式主要用于服务器端，等待并处理请求的信息，并发送响应给客户端。
+
+#### 消息模式
+支持3种消息模式：
+* [Publish/Subscribe](#Publish/Subscribe)
+* [Request/Reply](#Request/Reply)
+* [Queueing](#Queueing)
+
+#### Publish/Subscribe
+
+Publish/Subscribe是一对多的消息模型。Publisher往一个主题上发送消息，任何订阅了此主题的Subscriber都可以接收到该主题的消息。
+
+**服务质量指标：**
+
+* 至多发一次
+
+NATS系统是一种“发送后不管”的消息通信系统。往某主题上发送时，如果没有subscriber，或者所有subscriber不在线，则该消息不会给处理。如果需要更高的QoS，可以使用[NATS Streaming](http://nats.io/documentation/streaming/nats-streaming-intro/)，或者在客户端中增加可靠性。
+
+* 至少发一次([NATS Streaming](http://nats.io/documentation/streaming/nats-streaming-intro/))
+
+提供更高的的QoS，但是会付出降低吞吐率和增加延迟的代价。
+
+![drawing](/img/in-post/nats/nats-pub-sub.png)
+
+#### Request/Reply
+
+publisher往主题中发布一个带预期响应的消息，subscriber执行请求调用，并返回最先的响应。
+支持两种请求-响应消息通信模式：
+* 点对点：最快、最先的响应。
+* 一对多：可以限制Requestor收到的应答数量。
+
+![drawing](/img/in-post/nats/nats-req-rep.png)
+
+#### Queueing
+
+subscriber注册的时候，需指定一个队列名。指定相同队列名的subscriber，形成一个队列组。当主题收到消息后，订阅了此主题的队列组，会自动选择一个成员来接收消息。尽管队列组有多个subscriber，但每条消息只能被组中的一个subscriber接收。
+
+![drawing](/img/in-post/nats/nats-queue.png)
+
+## NATS Protocol
+NATS连接协议是一个简单的、基于文本的发布/订阅风格的协议。与传统的二进制消息格式的消息通信系统不同，基于文本的NATS协议，使得客户端实现很简单，可以方便地选择多种编程语言或脚本语言来实现。
+
+#### 协议约定
+
+*主题*
+
+大小写敏感，必须是不能包含空格的非空字符串，可以包含标志分隔符"."。
+
+*通配符*
+
+订阅主题中可以使用“*”通配符，但是通配符必须被标识分隔。支持两种通配符：
+* 星号`*`：匹配任意层级中的任意标记，如A.*.
+* 大于号`>`：匹配所有当前层级之后的标记，如A.>
+
+*新行*
+
+CR+LF（即\r\n，0X0D0A）作为协议消息的终止。新行还用于标记PUB或MSG协议中消息的实际有效负载的开始。
+
+#### 协议操作
+操作名是大小写不敏感的。详细的操作，参考[NATS Protocol](http://nats.io/documentation/internals/nats-protocol/)
+
+*Protocol Messages*
+
+Client操作之后，Server都会给出相应的信息。
+* `+OK`：Server响应正确。
+* `-Err`：协议错误，将导致Client断开连接。
