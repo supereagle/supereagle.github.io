@@ -4,7 +4,7 @@ title:      "NATS消息系统"
 subtitle:   "开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统"
 date:       2017-01-15
 author:     "Robin"
-header-img: "img/in-post/nats/nats.jpg"
+header-img: "/img/in-post/nats/nats.jpg"
 tags:
     - NATS
     - Message
@@ -12,16 +12,19 @@ tags:
 
 ## Catagory
 
-1. [概述](#概述)
-	1. [简介](#简介)
-	2. [优势](#优势)
-	3. [优势](#优势)
-2. [NATS Messaging](#nats-messaging)
-	1. [Subscriber处理消息模式](#Subscriber处理消息模式)
-	2. [消息模式](#消息模式)
-3. [NATS Protocol](#nats-protocol)
-	1. [协议约定](#协议约定)
-	2. [协议操作](#协议操作)
+- [概述](#概述)
+	- [简介](#简介)
+	- [优势](#优势)
+	- [优势](#优势)
+- [NATS Messaging](#nats-messaging)
+	- [Subscriber处理消息模式](#Subscriber处理消息模式)
+	- [消息模式](#消息模式)
+- [NATS Protocol](#nats-protocol)
+	- [协议约定](#协议约定)
+	- [协议操作](#协议操作)
+- [Demo](#demo)
+	- [实验环境](#实验环境)
+	- [实验演示](#实验演示)
 
 ## 概述
 NATS是一个开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统。NATS服务器是Golang语言开发，客户端由官方和社区提供了10多种语言的客户端。
@@ -106,7 +109,7 @@ NATS连接协议是一个简单的、基于文本的发布/订阅风格的协议
 
 *通配符*
 
-订阅主题中可以使用“*”通配符，但是通配符必须被标识分隔。支持两种通配符：
+订阅主题中可以使用通配符，但是通配符必须被标识分隔。支持两种通配符：
 * 星号`*`：匹配任意层级中的任意标记，如A.*.
 * 大于号`>`：匹配所有当前层级之后的标记，如A.>
 
@@ -122,3 +125,151 @@ CR+LF（即\r\n，0X0D0A）作为协议消息的终止。新行还用于标记PU
 Client操作之后，Server都会给出相应的信息。
 * `+OK`：Server响应正确。
 * `-Err`：协议错误，将导致Client断开连接。
+
+## Demo
+
+#### 实验环境
+
+NATS protocol是基于文本的，Client通过普通的TCP/IP套接字与服务器通信，因此NATS使用起来是非常方便和容易。
+
+如果想体验和实现NATS，只需要搭建NATS服务器，通过Telnet连接，就可以尝试NATS的协议操作进行实验。获得NATS服务器的两种途径：
+* 官方测试服务器：`demo.nats.io`
+* 基于Docker镜像创建
+
+Docker Hub有很多NATS的镜像，包括一些官方提供的。通过`docker search`命令查找：
+```
+# docker search nats
+INDEX       NAME                                             DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+docker.io   docker.io/nats                                   NATS is an open-source, high-performance, ...   96        [OK]       
+docker.io   docker.io/nats-streaming                         NATS Streaming is an open-source, high-per...   12        [OK]     
+```
+
+一般从Docker Hub上选择镜像的原则：STARS越多越好；OFFICIAL更加靠谱。
+
+在自己一台Docker Host上，通过如下命令创建NATS服务器：
+
+`docker run -id -p 4222:4222 -p 8222:8222 -p 6222:6222 docker.io/nats:0.9.4`
+
+直接访问这台机器的4222端口，就可以连接到NATS服务器上。
+
+#### 实验演示
+
+下面的所有演示，都是通过Telnet连接到官方测试服务器`demo.nats.io`进行的。
+
+* 连接服务器
+
+```
+# telnet demo.nats.io 4222
+Trying 107.170.221.32...
+Connected to demo.nats.io.
+Escape character is '^]'.
+INFO {"server_id":"O4PDgd2slz5h90ZZbGoCCA","version":"0.9.4","go":"go1.6.3","host":"0.0.0.0","port":4222,"auth_required":false,"ssl_required":false,"tls_required":false,"tls_verify":false,"max_payload":1048576} 
+```
+
+* Publis/Subscribe模式
+
+开启两个Terminal T1和T2，分别为Subscriber和Publisher。同时将它们连接到服务器上后，先T1执行`SUB`订阅主题foo，然后T2执行`PUB`往主题foo中发送消息。
+
+T1：
+```
+SUB foo 1
++OK
+MSG foo 1 5
+hello
+MSG foo 1 4
+nats
+```
+
+T2：
+```
+PUB foo 5
+hello
++OK
+PUB foo 4
+nats
++OK
+```
+
+* Queueing模式
+
+开启三个Terminal T1，T2，T3和T4，T1，T2和T3都为Subscriber，T4为Publisher。同时将它们连接到服务器上后，先T1，T2和T3执行`SUB`订阅主题foo，然后T4执行`PUB`往主题foo中发送消息。
+
+T1: 在组g1中，与T2只有一个能收到消息。
+```
+sub foo g1 1
++OK
+MSG foo 1 5
+nats1
+```
+
+T2: 在组g1中，与T1只有一个能收到消息。
+```
+sub foo g1 2
++OK
+MSG foo 2 5
+hello
+```
+
+T3: 不在组g1中，能收到所有消息。
+```
+sub foo 3
++OK
+MSG foo 3 5
+hello
+MSG foo 3 5
+nats1
+```
+
+T4:
+```
+pub foo 5
+hello
++OK
+pub foo 5
+nats1
++OK
+```
+
+* 通配符
+
+开启三个Terminal T1，T2，T3和T4，T1，T2和T3都为Subscriber，T4为Publisher。同时将它们连接到服务器上后，先T1，T2和T3执行`SUB`订阅不同主题，然后T4执行`PUB`往不同主题中发送消息。
+
+T1: 只能订阅foo的消息。
+```
+sub foo 1
++OK
+MSG foo 1 4
+msg1
+```
+
+T2: 只能订阅foo开头两个层级的主题，但是不能订阅foo。
+```
+sub foo.* 2
++OK
+MSG foo.bar 2 4
+msg2
+```
+
+T3: 只能订阅foo开头任意层级的主题，但是不能订阅foo。
+```
+sub foo.> 3
++OK
+MSG foo.bar 3 4
+msg2
+MSG foo.bar.zoe 3 4
+msg3
+```
+
+T4:
+```
+pub foo 4
+msg1
++OK
+pub foo.bar 4
+msg2
++OK
+pub foo.bar.zoe 4
+msg3
++OK
+```
+
