@@ -14,8 +14,7 @@ tags:
 
 - [概述](#概述)
 	- [简介](#简介)
-	- [优势](#优势)
-	- [优势](#优势)
+	- [优势和劣势](#优势和劣势)
 - [NATS Messaging](#nats-messaging)
 	- [Subscriber处理消息模式](#Subscriber处理消息模式)
 	- [消息模式](#消息模式)
