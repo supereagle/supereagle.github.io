@@ -1,6 +1,6 @@
 # Site settings
-title: Your Blog
-SEOTitle: 你的博客 | Your Blog
+title: Robin Blog
+SEOTitle: 乐金明的博客 | Robin Blog
 header-img: img/home-bg.jpg
 email: jmyue@hotmail.com
 description: ""
@@ -12,11 +12,11 @@ baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
 # SNS settings
 RSS: false
-weibo_username:     robin
-zhihu_username:     robin
-github_username:    robin
+#weibo_username:     robin
+#zhihu_username:     robin
+github_username:    supereagle
 #twitter_username:  robin
-facebook_username:  robin
+#facebook_username:  robin
 
 
 
@@ -68,8 +68,8 @@ ga_domain: huangxuan.me
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "写写代码，做做设计，看看产品。世界那么大，多玩玩看看。"
-sidebar-avatar: /img/avatar-hux.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-about-description: "Stay hungry, Stay foolish"
+sidebar-avatar: /img/avatar.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
@@ -85,16 +85,7 @@ friends: [
         title: "Hux Blog",
         href: "http://huangxuan.me"
     },{
-        title: "Foo",
-        href: "#"
-    },{
-        title: "Bar",
-        href: "#"
-    },{
-        title: "Example Friends",
-        href: "#"
-    },{
-        title: "It helps SEO",
-        href: "#"
+        title: "Kumu Blog",
+        href: "http://blog.opskumu.com"
     }
 ]
