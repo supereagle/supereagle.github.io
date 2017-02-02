@@ -4,7 +4,7 @@ SEOTitle: 乐金明的博客 | Robin Blog
 header-img: img/home-bg.jpg
 email: jmyue@hotmail.com
 description: ""
-keyword: ""
+keyword: "乐金明, 乐金明的博客, Robin, Robin Blog, Supereagle, Docker, DevOps, 容器"
 url: ""              # your host, for absolute URL
 baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 
@@ -25,7 +25,7 @@ github_username:    supereagle
 highlighter: rouge
 permalink: pretty
 paginate: 10
-exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md"]
 anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
 
 
