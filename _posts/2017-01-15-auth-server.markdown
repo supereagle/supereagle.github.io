@@ -51,6 +51,25 @@ Auth Server接收到token请求后，通过Ticket Parser解析和校验ticket，
 
 #### Plugable Auth Server系统设计
 
+![drawing](/img/in-post/auth-server/auth-sever-architecture.png)
+
+上图示例中，被保护的资源为Products和Orders，分别有Products Server和Orders Server两个微服务对其提供服务。它们使用统一的Auth Server进行权限认证和授权。Auth Server中Ticket Parser和Authn/Authz都是Pluggable的，使用统一Token Gen生产token。其实Token Gen也可以是Pluggable，可以根据Service选择不同的token产生策略。
+
+**Ticket结构**
+
+示例：realm="http://oath-server.taobao.com/api/token",service="products",scope="products:foods:view"
+
+- Realm : Auth server url
+- Service : 指定使用的auth service，即auth server中的authn/authz plugin
+- Scope : 主要是resource type，name以及actions
+
+**Token结构**
+
+Token由经过编码的3部分组成，之间通过"."分割。
+
+- Header : 
+- Claims : 一组resource及其对应的actions
+- Signature : 
 
 ## Reference
 
