@@ -12,11 +12,13 @@ tags:
 ## Category
 
 - [Installation](#installation)
-	- [Check Prerequisites]
-	- [Install from Docker’s Repositories]
+	- [Check Prerequisites](#check-prerequisites)
+	- [Install from Docker’s Repositories](#install-from-dockers-repositories)
+	- [Install from Docker binaries](#install-from-docker-binaries)
 - [Configuration](#configuration)
-	- [Configuration for Docker v1.10.3]
-	- [Configuration for Docker v1.13.0]
+	- [Useful Options](#useful-options)
+	- [Configuration for Docker v1.10.3](#configuration-for-docker-v1.10.3)
+	- [Configuration for Docker v1.13.0](#configuration-for-docker-v1.13.0)
 - [Reference](#reference)
 
 
@@ -35,6 +37,12 @@ CentOS官方提供docker RPM安装包，不过这个安装包是经过定制化�
 
 因此，已经在CentOS上安装了旧的Docker，需要先将旧的Docker卸载：`yum -y remove docker docker-selinux`，然后才能安装Docker官方提供的最新RPM包。
 
+### Install from Docker Binaries
+
+从官方[Release Notes](https://github.com/docker/docker/releases)下载平台对应的二进制文件压缩包，格式为`tar.gz`或者`zip`。将压缩包解压，并将解压后的二进制文件复制到/usr/bin/目录下。然后就可以后台启动Docker Daemon: `sudo dockerd &`。
+
+一般情况下，不建议通过二进制文件安装。因为，这种方式安装的Docker不会被systemd管理，不方便Docker运行的管理和Debug。但是，这种方式非常适合Docker升级，不用卸载老的Docker，只需替换二进制文件，还是可以按以前的方式执行Docker。
+
 ## Configuration
 
 由于一直使用的操作系统是CentOS 7.1，因此下面介绍的Docker Configuration都是基于该平台的。Docker同时支持`Command Options`和`--config-file`两种配置Docker Daemon的方式。之前在Docker v1.10.3中，使用`Command Options`的方式，后来升级到Docker v1.13.0之后，开始使用`--config-file`的方式。选择使用`--config-file`的主要原因：  
@@ -42,6 +50,23 @@ CentOS官方提供docker RPM安装包，不过这个安装包是经过定制化�
 * docker.service更加简单，不用`EnvironmentFile`导入环境变量，`ExecStart`后面也不用跟各种参数
 * 支持通过systemd动态加载配置，不用重启Docker（Docker v1.12.0开始引入）
 * 这也是Docker官方建议的配置方式。
+
+### Useful Options
+
+|                |   Description  | 	Default    |
+|----------------|----------------|----------------|
+| config-file  | Daemon配置文件         | /etc/docker/daemon.json |
+| disable-legacy-registry   |  禁用Docker Registry V1   | 	    |
+| max-concurrent-downloads | pull镜像的最大并行数    | 	 3   |
+| max-concurrent-uploads |  push镜像的最大并行数   | 	5    |
+|  insecure-registries | 无需TLS检查的Registry  | 	    |
+|    live-restore  | Daemon down时container继续run  | 	    |
+|       debug         |  开启Debug模式   | 	    |
+|     log-level       |  log级别   | 	info    |
+|     log-opt           | log driver的选项    | 	    |
+|     storage-driver           |  storage driver   | 	    |
+|     storage-opts           |  storage driver选项   | 	    |
+
 
 ### Configuration for Docker v1.10.3
 
@@ -205,3 +230,4 @@ WantedBy=multi-user.target
 
 * [Install Docker Engine](https://docs.docker.com/engine/installation/)
 * [Configure and run Docker on various distributions](https://docs.docker.com/engine/admin/)
+* [Docker Daemon Options](https://docs.docker.com/engine/reference/commandline/dockerd/)
