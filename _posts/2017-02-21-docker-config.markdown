@@ -51,6 +51,8 @@ CentOS官方提供docker RPM安装包，不过这个安装包是经过定制化�
 * 支持通过systemd动态加载配置，不用重启Docker（Docker v1.12.0开始引入）
 * 这也是Docker官方建议的配置方式。
 
+`Command Options`和`--config-file`两种配置方式可以一起使用，不过需要注意的是，它们之间不能有冲突。这两种配置中不能存在相同的option，无论它们的值是否相同，否则Docker Daemon将无法启动。
+
 ### Useful Options
 
 |                |   Description  | 	Default    |
