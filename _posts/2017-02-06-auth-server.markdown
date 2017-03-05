@@ -33,6 +33,8 @@ tags:
 - *Client* : 资源请求者
 - *Resource Server* : 资源持有者，能够根据token接受并响应资源请求
 - *Auth Server* : 资源访问权限的认证、授权者
+	* AuthN : 用户认证，判断用户身份是否合法
+	* AuthZ : 用户授权，判断用户是否有资源访问的权限
 - *Auth Plugins* :
 	* Ticket Gen : 在Resource Server端，如果请求的token不存在或者无效，根据请求生成ticket
 	* Ticket Parser : 在Auth Server端，解析ticket
@@ -47,7 +49,7 @@ tags:
 Client接收到401响应后，从响应中拿到ticket，然后根据ticket中信息向Auth Server请求token。
 
 4. Auth Server通过认证、授权后生成token：
-Auth Server接收到token请求后，通过Ticket Parser解析和校验ticket，然后根据ticket中的资源访问信息和用户信息进行认证和授权。如果认证和授权失败，则返回401响应。否则，根据认证授权结果生成token并返回给Client。
+Auth Server接收到token请求后，通过Ticket Parser解析和校验ticket，然后根据ticket中的资源访问信息和用户信息依次进行认证和授权。认证判断用户身份是否合法，授权则判断用户是否有资源访问的权限。如果认证或授权失败，则返回401响应。否则，根据认证授权结果生成token并返回给Client。
 
 #### Plugable Auth Server系统设计
 
