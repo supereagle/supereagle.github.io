@@ -1,0 +1,186 @@
+---
+layout:     post
+title:      "Kubemark: Performance Test Tool for Your Kubernetes Cluster"
+subtitle:   ""
+date:       2017-03-09
+author:     "Robin"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - Kubernetes
+    - Kubemark
+    - Performance
+---
+
+## Category
+
+- [Installation](#installation)
+	- [Check Prerequisites](#check-prerequisites)
+	- [Install from Docker’s Repositories](#install-from-dockers-repositories)
+	- [Install from Docker binaries](#install-from-docker-binaries)
+- [Configuration](#configuration)
+	- [Useful Options](#useful-options)
+	- [Configuration for Docker v1.10.3](#configuration-for-docker-v1.10.3)
+	- [Configuration for Docker v1.13.0](#configuration-for-docker-v1.13.0)
+- [Reference](#reference)
+
+[Kubemark](https://github.com/kubernetes/community/blob/master/contributors/devel/kubemark-guide.md)是K8s官方提供的一个对K8s集群进行性能测试的工具。它可以模拟出一个K8s cluster（Kubemark cluster），不受资源限制，从而能够测试的集群规模比真实集群大的多。这个cluster中master是真实的机器，所有的nodes是Hollow nodes。Hollow nodes执行的还是真实的K8s程序，只是不会调用Docker，因此测试会走一套K8s API调用的完整流程，但是不会真正创建pod。
+
+Kubermark是在模拟的Kubemark cluster上跑E2E测试，从而获得集群的性能指标。Kubermark cluster的测试数据，虽然与真实集群的稍微有点误差，不过可以代表真实集群的数据，具体数据见[Updates to Performance and Scalability in Kubernetes 1.3 -- 2,000 node 60,000 pod clusters](http://blog.kubernetes.io/2016/07/kubernetes-updates-to-performance-and-scalability-in-1.3.html)。因此，可以借用Kubermark，直接在真实集群上跑E2E测试，从而对我们真实集群进行性能测试。
+
+## Prepare Environment
+
+### Kubernetes Cluster
+
+### 安装依赖
+
+```
+yum install -y gcc.x86_64
+```
+
+### Go开发环境
+
+1. 下载[go1.7.4.linux-amd64.tar.gz](https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz)（保持与K8s构建用的Go版本一致）
+2. 解压到/usr/local/go目录下
+3. 设置GOROOT和GOPATH环境变量
+	/etc/profile中添加：
+	```
+	export GOPATH=/root/gocode
+	export PATH=$PATH:/opt/maven/latest/bin:$GOPATH/bin:/usr/local/go/bin
+	```
+	使变量生效：source /etc/profile
+
+### Test Images
+
+为了避免下载测试镜像，给Kubemark性能测试的结果带来误差，在运行Kubemark前，需要在所有K8s nodes上提前准备好这些镜像。Kubemark测试时使用的image都是GCR上面的，对于不能翻墙的Kubernetes Cluster，可以从[时速云Docker Registry](https://hub.tenxcloud.com/)下载相应的镜像到本地，然后重新标签为GCR的测试image。对于甚至不能连接外网的Kubernetes Cluster，可以通过一台可以连外网的机器从时速云Docker Registry下载所有镜像，然后上传到公司内部的Docker Registry，所有K8s nodes从公司Docker Registry上下载测试image，然后重新标签为GCR的测试image。
+
+## Run Kubemark
+
+1. Git clone K8s源码
+
+	```
+	git clone https://github.com/kubernetes/kubernetes.git
+	cd kubernetes
+	git checkout -b v1.5.0 v1.5.0 （checkout需要测试的K8s版本）
+	cd ..
+	mkdir $GOPATH/src/k8s.io
+	mv kubernetes $GOPATH/src/k8s.io/
+	cd $GOPATH/src/k8s.io/kubernetes
+	```
+	**备注：后续的所有命令操作，都是在$GOPATH/src/k8s.io/kubernetes目录下。**
+
+2. 准备构建依赖
+
+	```
+	# cat vendor/k8s.io/client-go
+	../../staging/src/k8s.io/client-go
+	# cd vendor/k8s.io/client-go
+	# ln -s ../../staging/src/k8s.io/client-go client-go
+	```
+
+3. 自动产生需要的代码bindata.go
+
+	```
+	# go get -u github.com/jteeuwen/go-bindata/...
+	# ./hack/generate-bindata.sh
+	```
+
+4. 构建测试文件
+
+	```
+	make WHAT='test/e2e/e2e.test'
+	make ginkgo
+	```
+
+5. 设置环境变量
+
+	```
+	export KUBECTL_PATH=/bin/kubectl
+	export KUBERNETES_PROVIDER=local
+	```
+
+6. 创建kubeconfig
+
+	```
+	kubectl config view -o yaml >> /root/.kube/config
+	```
+
+7. 执行performance test
+
+	```
+	go run hack/e2e.go -v -test  --test_args="--host=http://127.0.0.1:8080 --ginkgo.focus=\[Feature:Performance\]" >> logs/log.txt （将log重定向到文件中，方便分析数据）
+	```
+
+非K8s master上运行Kubemark，除了--test_args中的–host需要配置为正确的apiserver，还要在跑Kubemark的机器上做如下配置（Kubemark需要通过kubectl获得测试K8s cluster status）：
+
+- 需要有kubectl binary，存放的位置与$KUBECTL_PATH保持一致
+- 配置kubeconfig file
+
+	```
+	# cat ~/.kube/config
+	apiVersion: v1
+	clusters:
+	- cluster:
+	    api-version: v1
+	    server: http://k8s-apiserver.com:8080 （测试apiserver地址）
+	  name: e2e-cluster
+	contexts:
+	- context:
+	    cluster: e2e-cluster
+	  name: e2e-context
+	current-context: "e2e-context"
+	kind: Config
+	preferences: {}
+	users: []
+	```
+
+
+## Trouble Shootings
+
+1. 不要将Windows上clone的K8s源码传到Linux上进行测试，否则会遇到以下坑：
+	1.1 *.sh has no permissions
+	
+	需要对脚本文件增加可执行权限：```find hack -name *.sh | xargs chmod +x```
+	
+	1.2 Something went wrong: encountered 2 errors: [error running kubectl version: fork/exec ./cluster/kubectl.sh: no such file or directory error running get status: fork/exec ./hack/e2e-internal/e2e-status.sh: no such file or directory]
+	
+	需要对脚本文件进行dos2unix转换：```find hack -name *.sh | xargs dos2unix```
+	
+	1.3 构建e2e.test测试文件失败（[k8s issue](https://github.com/kubernetes/kubernetes/issues/30584#issuecomment-240070174)）
+	
+	/gofiles.mk.stamp', needed by `pkg/apis/extensions/v1beta1/zz_generated.conversion.go'.  Stop.
+	make: *** [generated_files] Error 2
+	
+	此问题没有workaround。必须在linux平台上直接clone K8s源码。
+
+2. kubectl binary找不到
+
+	```
+	2017/02/20 17:37:36 e2e.go:722: Running: kubectl version
+	It looks as if you don't have a compiled kubectl binary
+	 
+	If you are running from a clone of the git repo, please run
+	'./build/run.sh make cross'. Note that this requires having
+	Docker installed.
+	 
+	If you are running from a binary release tarball, something is wrong.
+	Look at http://kubernetes.io/ for information on how to contact the
+	development team for help.
+	2017/02/20 17:37:36 e2e.go:724: Step 'kubectl version' finished in 11.442469ms
+	2017/02/20 17:37:36 e2e.go:722: Running: get status
+	Local doesn't need special preparations for e2e tests
+	It looks as if you don't have a compiled kubectl binary
+	If you are running from a clone of the git repo, please run
+	'./build/run.sh make cross'. Note that this requires having
+	Docker installed.
+	If you are running from a binary release tarball, something is wrong.
+	Look at http://kubernetes.io/ for information on how to contact the
+	development team for help.
+	2017/02/20 17:37:36 e2e.go:724: Step 'get status' finished in 15.370992ms
+	2017/02/20 17:37:36 e2e.go:180: Something went wrong: encountered 2 errors: [error running kubectl version: exit status 1 error running get status: exit status 1]
+	exit status 1
+	```
+	手动指定kubectl path: export KUBECTL_PATH=/bin/kubectl
+
+
+
+## Reference
