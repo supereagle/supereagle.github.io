@@ -1,0 +1,238 @@
+---
+layout:     post
+title:      "Kubernetes Source Code Reading: Kubelet"
+subtitle:   "The kubelet is the primary “node agent” that runs on each node."
+date:       2017-03-06
+author:     "Robin"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - Docker
+    - Kubernetes
+    - Kubelet
+    - OSCR
+---
+
+> The version of Kubernetes source code is **`V1.5.3`**.
+
+# Category
+
+- [Kubelet功能组件](#kubelet功能组件)
+	- [PodWorkers](#podworkers)
+	- [PodManager](#podmanager)
+	- [StatusManager](#statusmanager)
+	- [containerRuntime](#containerruntime)
+	- [ImageGC](#imagegc)
+	- [ContainerGC](#containerGC)
+- [Kubelet工作原理](#kubelet工作原理)
+	- [Pod创建过程](#pod创建过程)
+- [Reference](#reference)
+
+
+## Kubelet功能组件
+
+### PodWorkers
+
+每个pod都有一个goroutines负责update pod。
+
+- **isWorking**：如果pod的一个update正在被处理，其他update会被ignore，但是killing的update除外。killing的update会被临时记录在lastUndeliveredWorkUpdate中，等当前正在处理的update完成后，再立即执行。
+- **UpdatePod**：执行pod update。如果pod没有update goroutine（新pod，或者kubelet重启），则为该pod新建一个goroutine。
+
+
+### PodManager
+
+增删改查pod，并维护static pod与mirror pod映射关系。
+
+**static pod**：非来自apiserver的pod，即来自file或者http的pod，apiserver不知道这些pod的存在。kubelet为这些pod，通过apiserver创建mirror pod。static pod与其对应的mirror pod有相同的pod full name（namespace/podname）。
+
+### StatusManager
+
+cache pod status，并同步pod status到apiserver。两种同步触发机制：
+
+- 隔10秒一次
+- pod状态更新：container ready，或者terminated，或者直接SetPodStatus
+
+[pkg/kubelet/status/status_manager.go](https://github.com/kubernetes/kubernetes/tree/v1.5.3/pkg/kubelet/status/status_manager.go)
+```
+const syncPeriod = 10 * time.Second
+
+func (m *manager) Start() {
+    // Don't start the status manager if we don't have a client. This will happen
+    // on the master, where the kubelet is responsible for bootstrapping the pods
+    // of the master components.
+    if m.kubeClient == nil {
+        glog.Infof("Kubernetes client is nil, not starting status manager.")
+        return
+    }
+
+    glog.Info("Starting to sync pod status with apiserver")
+    syncTicker := time.Tick(syncPeriod)
+    // syncPod and syncBatch share the same go routine to avoid sync races.
+    go wait.Forever(func() {
+        select {
+        case syncRequest := <-m.podStatusChannel:
+            m.syncPod(syncRequest.podUID, syncRequest.status)
+        case <-syncTicker:
+            m.syncBatch()
+        }
+    }, 0)
+}
+```
+
+### containerRuntime
+
+支持docker和rkt。如果是docker的话，就是dockertools.DockerManager；如果是rkt，就是rkt.Runtime。
+
+- DockerManager
+
+实现kubecontainer.Runtime接口，封装了DockerInterface的Client，负责与Docker Daemon交互。Runtime接口中的各操作，最终是调用Docker client实现。
+部分Docker Client返回的数据，需要从dockertypes类型转化为kubecontainer类型。例如，通过dockertools/convert.go中的toRuntimeImage和toRuntimeContainer分别转化dockertypes的image和container。
+
+- rkt.Runtime
+
+实现kubecontainer.Runtime接口，封装了rktapi.PublicAPIClient的apisvc，负责与rkt apiserver交互。Runtime接口中的各操作，最终是调用apisvc实现。
+
+### ImageGC
+
+ImageGCPolicy支持三个参数：
+
+- **MinAge**：image最小存活时间
+- **HighThresholdPercent**：镜像磁盘使用率高于该值，触发GC。即镜像磁盘的最高使用率
+- **LowThresholdPercent**： 镜像磁盘使用率低于该值，不触发GC。即镜像磁盘GC后的最低使用率。
+
+[pkg/kubelet/images/image_gc_manager.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/images/image_gc_manager.go)
+```
+// A policy for garbage collecting images. Policy defines an allowed band in
+// which garbage collection will be run.
+type ImageGCPolicy struct {
+    // Any usage above this threshold will always trigger garbage collection.
+    // This is the highest usage we will allow.
+    HighThresholdPercent int
+
+    // Any usage below this threshold will never trigger garbage collection.
+    // This is the lowest threshold we will try to garbage collect to.
+    LowThresholdPercent int
+
+    // Minimum age at which an image can be garbage collected.
+    MinAge time.Duration
+}
+```
+
+### ContainerGC
+
+ContainerGCPolicy支持三个参数：
+- **MinAge**：容器最小存活时间
+- **MaxPerPodContainer**：每个pod最大容器数
+- **MaxContainers**：整个node上最大容器数
+
+唯一的接口GarbageCollect实际上是调用containerRuntime(Docker，或者rkt)的GarbageCollect。
+
+[pkg/kubelet/container/container_gc.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/container/container_gc.go)
+```
+// Specified a policy for garbage collecting containers.
+ 
+type ContainerGCPolicy struct {
+    // Minimum age at which a container can be garbage collected, zero for no limit.
+    MinAge time.Duration
+ 
+    // Max number of dead containers any single pod (UID, container name) pair is
+    // allowed to have, less than zero for no limit.
+    MaxPerPodContainer int
+ 
+    // Max number of total dead containers, less than zero for no limit.
+    MaxContainers int
+}
+ 
+// Manages garbage collection of dead containers.
+//
+// Implementation is thread-compatible.
+type ContainerGC interface {
+    // Garbage collect containers.
+    GarbageCollect(allSourcesReady bool) error
+}
+ 
+func (cgc *realContainerGC) GarbageCollect(allSourcesReady bool) error {
+    return cgc.runtime.GarbageCollect(cgc.policy, allSourcesReady)
+}
+```
+
+Docker的GarbageCollect将非running且超过MinAge的container分成两类：
+- **evictUnits**：可以解析出container name，根据GCPolicy选择性删除。
+- **unidentifiedContainers**：不能解析出container name，一定删除。
+
+ImageGC和ContainerGC，都是由StartGarbageCollection()分别单独起一个goroutine，根据GCPeriod定时执行。StartGarbageCollection()与NewMainKubelet()一起，在kubelet/app/server.go的CreateAndInitKubelet()中调用。
+
+[cmd/kubelet/app/server.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/cmd/kubelet/app/server.go#L794)
+```
+func CreateAndInitKubelet(kubeCfg *componentconfig.KubeletConfiguration, kubeDeps *kubelet.KubeletDeps, standaloneMode bool) (k kubelet.KubeletBootstrap, err error) {
+	// TODO: block until all sources have delivered at least one update to the channel, or break the sync loop
+	// up into "per source" synchronizations
+
+	k, err = kubelet.NewMainKubelet(kubeCfg, kubeDeps, standaloneMode)
+	if err != nil {
+		return nil, err
+	}
+
+	k.BirthCry()
+
+	k.StartGarbageCollection()
+
+	return k, nil
+}
+```
+
+[pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1124)
+```
+// Starts garbage collection threads.
+func (kl *Kubelet) StartGarbageCollection() {
+	loggedContainerGCFailure := false
+	go wait.Until(func() {
+		if err := kl.containerGC.GarbageCollect(kl.sourcesReady.AllReady()); err != nil {
+			glog.Errorf("Container garbage collection failed: %v", err)
+			kl.recorder.Eventf(kl.nodeRef, api.EventTypeWarning, events.ContainerGCFailed, err.Error())
+			loggedContainerGCFailure = true
+		} else {
+			var vLevel glog.Level = 4
+			if loggedContainerGCFailure {
+				vLevel = 1
+				loggedContainerGCFailure = false
+			}
+
+			glog.V(vLevel).Infof("Container garbage collection succeeded")
+		}
+	}, ContainerGCPeriod, wait.NeverStop)
+
+	loggedImageGCFailure := false
+	go wait.Until(func() {
+		if err := kl.imageManager.GarbageCollect(); err != nil {
+			glog.Errorf("Image garbage collection failed: %v", err)
+			kl.recorder.Eventf(kl.nodeRef, api.EventTypeWarning, events.ImageGCFailed, err.Error())
+			loggedImageGCFailure = true
+		} else {
+			var vLevel glog.Level = 4
+			if loggedImageGCFailure {
+				vLevel = 1
+				loggedImageGCFailure = false
+			}
+
+			glog.V(vLevel).Infof("Image garbage collection succeeded")
+		}
+	}, ImageGCPeriod, wait.NeverStop)
+}
+```
+
+## Kubelet工作原理
+
+### Pod创建过程
+
+Kubelet通过syncLoop对开始对Pod的整个生命周期进行管理。来自于配置文件，HTTP请求或者Kube-apiserver的配置更新，都触发syncLoop。
+
+syncLoopIteration会一直监听Pod的配置和生命周期的更新，同时也是定时被触发。
+
+Pod配置更新，支持五种kubetypes: ADD，UPDATE，REMOVE，RECONCILE，DELETE。这些更新会交给SyncHandler接口来处理，其实Kubelet自己实现了这个接口。
+
+各Handler最终都会调用dispatchWork来执行这些操作。其中主要是执行podWorkers中的UpdatePod来执行更新Pod的操作。managePodLoop会调用Kubelet的syncPod方法，来最终同步pod状态到本地。
+
+
+## Reference
+* [kubelet源码分析](https://jdostech.github.io/2016/09/07/kubelet/)
+* []()
