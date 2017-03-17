@@ -272,7 +272,7 @@ yum install -y gcc.x86_64
 	```
 	# cat vendor/k8s.io/client-go
 	../../staging/src/k8s.io/client-go
-	# cd vendor/k8s.io/client-go
+	# cd vendor/k8s.io/
 	# ln -s ../../staging/src/k8s.io/client-go client-go
 	```
 
@@ -301,7 +301,6 @@ yum install -y gcc.x86_64
 	```
 	Feb 21 18:30:25.214: INFO: >>> kubeConfig: /root/.kube/config
 	F0221 18:30:25.214693   59826 e2e.go:99] Error loading client: error creating client: error loading KubeConfig: open /root/.kube/config: no such file or directory
-	产生kubeconfig文件：kubectl config view -o yaml >> config
 	```
 	
 	产生kubeconfig文件：kubectl config view -o yaml >> config
@@ -370,9 +369,36 @@ yum install -y gcc.x86_64
 	
 	**解决办法：**
 	
-	- [Generate cert file](https://kubernetes.io/docs/admin/authentication/#service-account-tokens)：cluster/saltbase/salt/generate-cert/make-ca-cert.sh ${apiserver_ip} 
-	- Add apiserver options：--root-ca-file=/srv/kubernetes/ca.crt --service-account-private-key-file=/srv/kubernetes/server.key
-	- Add controller manager options：--client-ca-file=/srv/kubernetes/ca.crt --tls-cert-file=/srv/kubernetes/server.cert --tls-private-key-file=/srv/kubernetes/server.key
+	- [Generate cert file](https://kubernetes.io/docs/admin/authentication/#service-account-tokens)：cluster/saltbase/salt/generate-cert/make-ca-cert.sh ${apiserver_ip} (注意：生产cert的脚本执行慢的原因是，需要下载[easy-rsa.tar.gz](https://storage.googleapis.com/kubernetes-release/easy-rsa/easy-rsa.tar.gz)，可以手动下载后放入~/kube/easy-rsa.tar.gz)
+	- Add apiserver options：--client-ca-file=/srv/kubernetes/ca.crt --tls-cert-file=/srv/kubernetes/server.cert --tls-private-key-file=/srv/kubernetes/server.key
+	- Add controller manager options：--root-ca-file=/srv/kubernetes/ca.crt --service-account-private-key-file=/srv/kubernetes/server.key
+
+10. 运行Kubemark机器与K8s master时间不同步，导致测试失败
+
+	**Kubemark log:**
+	```
+	STEP: Destroying namespace "e2e-tests-density-100-1-f3ldt" for this suite.
+	Mar 15 21:33:16.442: INFO: namespace: e2e-tests-density-100-1-f3ldt, resource: bindings, ignored listing per whitelist
+	• Failure [95.446 seconds]
+	[k8s.io] Density
+	/root/go/src/k8s.io/kubernetes/_output/local/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:826
+	  [Feature:Performance] should allow starting 30 pods per node [It]
+	  /root/go/src/k8s.io/kubernetes/_output/local/go/src/k8s.io/kubernetes/test/e2e/density.go:641
+	  Expected error:
+	      <*errors.errorString | 0xc420aa2ff0>: {
+	          s: "too high pod startup latency 50th percentile: 9h58m15.451869496s",
+	      }
+	      too high pod startup latency 50th percentile: 9h58m15.451869496s
+	  not to have occurred
+	  /root/go/src/k8s.io/kubernetes/_output/local/go/src/k8s.io/kubernetes/test/e2e/density.go:627
+	------------------------------
+	SSSSSSSSSSSSSSSSSSSSSSSSSSS....SSSSSSSSSS
+	Summarizing 1 Failure:
+	[Fail] [k8s.io] Density [It] [Feature:Performance] should allow starting 30 pods per node
+	```
+	
+	安装ntp并同步两台机器的时间。
+
 
 
 ## Reference
