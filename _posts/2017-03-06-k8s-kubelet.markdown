@@ -23,6 +23,7 @@ tags:
 	- [containerRuntime](#containerruntime)
 	- [ImageGC](#imagegc)
 	- [ContainerGC](#containerGC)
+	- [NetworkPlugin](#networkPlugin)
 - [Kubelet工作原理](#kubelet工作原理)
 	- [Pod创建过程](#pod创建过程)
 - [Reference](#reference)
@@ -217,6 +218,123 @@ func (kl *Kubelet) StartGarbageCollection() {
 			glog.V(vLevel).Infof("Image garbage collection succeeded")
 		}
 	}, ImageGCPeriod, wait.NeverStop)
+}
+```
+
+### NetworkPlugin
+
+Kubelet是通过kubeDeps获得NetworkPlugins信息。kubeDeps.NetworkPlugins是调用ProbeNetworkPlugins()收集所有Network Plugin。除了CNI的network plugin，还会收集NetworkPluginDir中的。
+
+InitNetworkPlugin()时，会根据NetworkPluginName来选择需要的Network Plugin，然后调用plugin的Init()进行初始化。对于CNI plugin，只用到host参数，hairpinMode，nonMasqueradeCIDR以及mtu都没有用到。
+
+networkPlugin初始化好后，会传递到containerRuntime，在Pod的生命周期中负责管理网络。
+
+Kubelet中实现CNI Network Plugin的主要代码在[pkg/kubelet/network/cni/cni.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/network/cni/cni.go)。
+
+
+#### cniNetwork
+
+cniNetwork主要有两个属性：
+- NetworkConfig：/etc/cni/net.d下面的config
+- CNIConfig：All paths to store CNI binaries, include `/opt/cni/bin`， `${vendorCNIDirPrefix}/opt/${pluginType}/bin`。并实现CNI接口。
+
+cniNetwork主要有两个方法：
+- addToNetwork：根据Pod信息，buildCNIRuntimeConf()，然后调用CNI接口AddNetwork()，将Pod添加到网络中。
+- deleteFromNetwork：与addToNetwork()类似，只是调用CNI接口DelNetwork()，将Pod从网络中删除。
+
+#### cniNetworkPlugin
+
+cniNetworkPlugin有两个网络：
+- loNetwork：getLoNetwork()获取loopback，必须有，没有导致无法调用CNI network
+	```
+	func getLoNetwork(binDir, vendorDirPrefix string) *cniNetwork {
+		loConfig, err := libcni.ConfFromBytes([]byte(`{
+	  "cniVersion": "0.1.0",
+	  "name": "cni-loopback",
+	  "type": "loopback"
+	}`))
+		if err != nil {
+			// The hardcoded config above should always be valid and unit tests will
+			// catch this
+			panic(err)
+		}
+		cninet := &libcni.CNIConfig{
+			Path: []string{vendorCNIDir(vendorDirPrefix, loConfig.Network.Type), binDir},
+		}
+		loNetwork := &cniNetwork{
+			name:          "lo",
+			NetworkConfig: loConfig,
+			CNIConfig:     cninet,
+		}
+	
+		return loNetwork
+	}
+	```
+
+- defaultNetwork：从/etc/cni/net.d下面读取config，只会读取第一个正确的，因此不要有多个
+	```
+	func getDefaultCNINetwork(pluginDir, binDir, vendorCNIDirPrefix string) (*cniNetwork, error) {
+		if pluginDir == "" {
+			pluginDir = DefaultNetDir
+		}
+		files, err := libcni.ConfFiles(pluginDir)
+		switch {
+		case err != nil:
+			return nil, err
+		case len(files) == 0:
+			return nil, fmt.Errorf("No networks found in %s", pluginDir)
+		}
+	
+		sort.Strings(files)
+		for _, confFile := range files {
+			conf, err := libcni.ConfFromFile(confFile)
+			if err != nil {
+				glog.Warningf("Error loading CNI config file %s: %v", confFile, err)
+				continue
+			}
+			// Search for vendor-specific plugins as well as default plugins in the CNI codebase.
+			vendorDir := vendorCNIDir(vendorCNIDirPrefix, conf.Network.Type)
+			cninet := &libcni.CNIConfig{
+				Path: []string{binDir, vendorDir},
+			}
+			network := &cniNetwork{name: conf.Network.Name, NetworkConfig: conf, CNIConfig: cninet}
+			return network, nil
+		}
+		return nil, fmt.Errorf("No valid networks found in %s", pluginDir)
+	}
+	```
+
+#### CNI Interface
+CNI接口是由[containernetworking](https://github.com/containernetworking/cni)定义的。定义的接口非常简单，只有四个方法：
+
+[containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L51)
+```
+type CNI interface {
+	AddNetworkList(net *NetworkConfigList, rt *RuntimeConf) (types.Result, error)
+	DelNetworkList(net *NetworkConfigList, rt *RuntimeConf) error
+
+	AddNetwork(net *NetworkConfig, rt *RuntimeConf) (types.Result, error)
+	DelNetwork(net *NetworkConfig, rt *RuntimeConf) error
+}
+```
+
+K8s在管理Pod网络时，主要用到其中的两个接口：AddNetwork()和DelNetwork()。以AddNetwork()为例，来分析其具体实现：先从pluginPath获得plugin的binary，然后injectRuntimeConfig()将网络配置注入到net中，并作为最后plugin执行的stdin，然后还会将network的操作（ADD或者DEL）以及RuntimeConf，作为plugin执行时的环境变量。
+
+[containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L169)
+```
+// AddNetwork executes the plugin with the ADD command
+func (c *CNIConfig) AddNetwork(net *NetworkConfig, rt *RuntimeConf) (types.Result, error) {
+	pluginPath, err := invoke.FindInPath(net.Network.Type, c.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	net, err = injectRuntimeConfig(net, rt)
+	if err != nil {
+		return nil, err
+	}
+
+	return invoke.ExecPluginWithResult(pluginPath, net.Bytes, c.args("ADD", rt))
 }
 ```
 
