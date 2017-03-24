@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "Kubernetes Source Code Reading: Kubelet"
-subtitle:   "The kubelet is the primary “node agent” that runs on each node."
+title:      "Kubernetes源码分析：Kubelet"
+subtitle:   "Kubernetes Source Code Reading: Kubelet"
 date:       2017-03-06
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
@@ -9,7 +9,7 @@ tags:
     - Docker
     - Kubernetes
     - Kubelet
-    - OSCR
+    - 源码分析
 ---
 
 > The version of Kubernetes source code is **`V1.5.3`**.

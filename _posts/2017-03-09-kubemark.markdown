@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "Kubemark: Performance Test Tool for Your Kubernetes Cluster"
-subtitle:   "Familiar with the performance and capacity of your Kubernetes cluster to make it work better"
+title:      "Kubernetes集群性能测试"
+subtitle:   "Kubemark: Performance Test Tool for Your Kubernetes Cluster"
 date:       2017-03-09
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
@@ -89,6 +89,8 @@ API调用延时统计数据表格示例：
 
 ### Kubernetes Cluster
 
+根据自己的平台，参考[官方安装文档](https://kubernetes.io/docs/getting-started-guides/)，搭建Kubernetes Cluster。
+
 ### 安装依赖
 
 ```
@@ -112,6 +114,8 @@ yum install -y gcc.x86_64
 为了避免下载测试镜像，给Kubemark性能测试的结果带来误差，在运行Kubemark前，需要在所有K8s nodes上提前准备好这些镜像。Kubemark测试时使用的image都是GCR上面的，对于不能翻墙的Kubernetes Cluster，可以从[时速云Docker Registry](https://hub.tenxcloud.com/)下载相应的镜像到本地，然后重新标签为GCR的测试image。对于甚至不能连接外网的Kubernetes Cluster，可以通过一台可以连外网的机器从时速云Docker Registry下载所有镜像，然后上传到公司内部的Docker Registry，所有K8s nodes从公司Docker Registry上下载测试image，然后重新标签为GCR的测试image。
 
 ## Run Kubemark
+
+> The version of Kubernetes source code is **`V1.5.3`**.
 
 1. Git clone K8s源码
 

@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Docker Configuration"
+title:      "Docker Daemon Configuration"
 subtitle:   "A better way to config Docker Daemon"
 date:       2017-02-21
 author:     "Robin"
