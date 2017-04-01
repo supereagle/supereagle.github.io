@@ -51,12 +51,11 @@ tags:
 
 ### Contiv Netplugin
 
-	```
-	netplugin -vlan-if bond0 -plugin-mode kubernetes -fwd-mode bridge -store-url=http://${ETCD_HOST}:${ETCD_PORT} -local-ip=${HOST_IP} -debug > /var/log/netplugin.log 2>&1 &
-	```
+```
+netplugin -vlan-if bond0 -plugin-mode kubernetes -fwd-mode bridge -store-url=http://${ETCD_HOST}:${ETCD_PORT} -local-ip=${HOST_IP} -debug > /var/log/netplugin.log 2>&1 &
+```
 
-	**`备注`**：`-vlan-if`表示的是VLAN的上行端口，注意Contiv默认与其连接的bridge是contivVlanBridge。
-
+**`备注`**：`-vlan-if`表示的是VLAN的上行端口，注意Contiv默认与其连接的bridge是contivVlanBridge。
 
 ## Kubernetes Configuration
 
@@ -77,7 +76,6 @@ Kubelet配置：
 
 Netplugin配置：（用于构建K8s client）
 ```
-
 # cat /opt/contiv/config/contiv.json 
 {
   "K8S_API_SERVER": "http://k8s.master.com:8080",
