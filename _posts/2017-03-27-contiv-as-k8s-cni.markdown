@@ -88,3 +88,4 @@ Netplugin配置：（用于构建K8s client）
 ## Reference
 - [Kubernetes Network Plugins](https://kubernetes.io/docs/concepts/cluster-administration/network-plugins/)
 - [Container Networking Interface Proposal](https://github.com/containernetworking/cni/blob/master/SPEC.md)
+- [Integration Guide for Calico on Kubernetes](http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/integration)
