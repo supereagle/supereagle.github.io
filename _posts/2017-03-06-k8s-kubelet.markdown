@@ -19,6 +19,7 @@ tags:
 - [Kubelet功能组件](#kubelet功能组件)
 	- [PodWorkers](#podworkers)
 	- [PodManager](#podmanager)
+	- [PodDNS](#podDNS)
 	- [StatusManager](#statusmanager)
 	- [containerRuntime](#containerruntime)
 	- [ImageGC](#imagegc)
@@ -44,6 +45,97 @@ tags:
 增删改查pod，并维护static pod与mirror pod映射关系。
 
 **static pod**：非来自apiserver的pod，即来自file或者http的pod，apiserver不知道这些pod的存在。kubelet为这些pod，通过apiserver创建mirror pod。static pod与其对应的mirror pod有相同的pod full name（namespace/podname）。
+
+### PodDNS
+
+支持两种DNSPolicy：
+- **ClusterFirst**：如果有Cluster DNS（kube-dns），则优先使用Cluster DNS。否则，回退到`Default`模式。
+- **Default**：使用由Kubelet决定的Default DNS。如果Kubelet使用`--cluster-dns=1.2.3.4`，则该Node上的所有Container的`/etc/resolv.conf`中都会添加`nameserver 1.2.3.4`。如果Kubelet没有使用`--cluster-dns`，则默认使用Node上的DNS解析。
+
+[pkg/api/types.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/api/types.go#L1487-L1499)
+```
+// DNSPolicy defines how a pod's DNS will be configured.
+type DNSPolicy string
+
+const (
+	// DNSClusterFirst indicates that the pod should use cluster DNS
+	// first, if it is available, then fall back on the default (as
+	// determined by kubelet) DNS settings.
+	DNSClusterFirst DNSPolicy = "ClusterFirst"
+
+	// DNSDefault indicates that the pod should use the default (as
+	// determined by kubelet) DNS settings.
+	DNSDefault DNSPolicy = "Default"
+)
+```
+
+为Pod获得DNS的具体实现：
+
+[pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1267-L1325)
+```
+// GetClusterDNS returns a list of the DNS servers and a list of the DNS search
+// domains of the cluster.
+func (kl *Kubelet) GetClusterDNS(pod *api.Pod) ([]string, []string, error) {
+	var hostDNS, hostSearch []string
+	// Get host DNS settings
+	if kl.resolverConfig != "" {
+		f, err := os.Open(kl.resolverConfig)
+		if err != nil {
+			return nil, nil, err
+		}
+		defer f.Close()
+
+		hostDNS, hostSearch, err = kl.parseResolvConf(f)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	useClusterFirstPolicy := pod.Spec.DNSPolicy == api.DNSClusterFirst
+	if useClusterFirstPolicy && kl.clusterDNS == nil {
+		// clusterDNS is not known.
+		// pod with ClusterDNSFirst Policy cannot be created
+		kl.recorder.Eventf(pod, api.EventTypeWarning, "MissingClusterDNS", "kubelet does not have ClusterDNS IP configured and cannot create Pod using %q policy. Falling back to DNSDefault policy.", pod.Spec.DNSPolicy)
+		log := fmt.Sprintf("kubelet does not have ClusterDNS IP configured and cannot create Pod using %q policy. pod: %q. Falling back to DNSDefault policy.", pod.Spec.DNSPolicy, format.Pod(pod))
+		kl.recorder.Eventf(kl.nodeRef, api.EventTypeWarning, "MissingClusterDNS", log)
+
+		// fallback to DNSDefault
+		useClusterFirstPolicy = false
+	}
+
+	if !useClusterFirstPolicy {
+		// When the kubelet --resolv-conf flag is set to the empty string, use
+		// DNS settings that override the docker default (which is to use
+		// /etc/resolv.conf) and effectively disable DNS lookups. According to
+		// the bind documentation, the behavior of the DNS client library when
+		// "nameservers" are not specified is to "use the nameserver on the
+		// local machine". A nameserver setting of localhost is equivalent to
+		// this documented behavior.
+		if kl.resolverConfig == "" {
+			hostDNS = []string{"127.0.0.1"}
+			hostSearch = []string{"."}
+		}
+		return hostDNS, hostSearch, nil
+	}
+
+	// for a pod with DNSClusterFirst policy, the cluster DNS server is the only nameserver configured for
+	// the pod. The cluster DNS server itself will forward queries to other nameservers that is configured to use,
+	// in case the cluster DNS server cannot resolve the DNS query itself
+	dns := []string{kl.clusterDNS.String()}
+
+	var dnsSearch []string
+	if kl.clusterDomain != "" {
+		nsSvcDomain := fmt.Sprintf("%s.svc.%s", pod.Namespace, kl.clusterDomain)
+		svcDomain := fmt.Sprintf("svc.%s", kl.clusterDomain)
+		dnsSearch = append([]string{nsSvcDomain, svcDomain, kl.clusterDomain}, hostSearch...)
+	} else {
+		dnsSearch = hostSearch
+	}
+	return dns, dnsSearch, nil
+}
+```
+
+**备注**：[Kubernetes 1.6](http://blog.kubernetes.io/2017/03/kubernetes-1.6-multi-user-multi-workloads-at-scale.html)的Kube DNS支持Private DNS Zones和Upstream Nameservers，使Pod的DNS解析更加灵活。
+参考：[Configuring Private DNS Zones and Upstream Nameservers in Kubernetes](http://blog.kubernetes.io/2017/04/configuring-private-dns-zones-upstream-nameservers-kubernetes.html)
 
 ### StatusManager
 
