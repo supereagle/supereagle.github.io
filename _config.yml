@@ -87,5 +87,8 @@ friends: [
     },{
         title: "Kumu Blog",
         href: "http://blog.opskumu.com"
+    },{
+        title: "Tony Blog",
+        href: "http://tonybai.com/articles/"
     }
 ]
