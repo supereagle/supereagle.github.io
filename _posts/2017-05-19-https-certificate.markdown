@@ -40,6 +40,8 @@ HTTPS虽然通过SSL对通信数据进行加密，但是并不能保证足够安
 
 ### TLS握手详解
 
+![drawing](/img/in-post/https-certificate/tls-handshake-of-https.png)
+
 1. ClientHello
 客户端主要向服务器提供以下信息:
 * 支持的安全协议版本
