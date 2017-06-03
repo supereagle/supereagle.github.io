@@ -27,7 +27,7 @@ tags:
 
 ## Steps to update Docker
 
-1. Get docker-engine-1.13.0-1.el7.centos.x86_64.rpm and docker-engine-selinux-1.13.0-1.el7.centos.noarch.rpm from Docker Stable Repository.
+1. Get docker-engine-1.13.0-1.el7.centos.x86_64.rpm and docker-engine-selinux-1.13.0-1.el7.centos.noarch.rpm from [Docker Stable Repository](https://yum.dockerproject.org/repo/main/centos/7/Packages/).
 2. Download yum repo http://mirrors.aliyun.com/repo/Centos-7.repo and place it in folder /etc/yum.repo.d/
 3. Create Docker Daemon config file: /etc/docker/daemon.json  
 ```json
