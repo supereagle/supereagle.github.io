@@ -4,7 +4,7 @@ title:      "从Docker v1.10.3升级到v1.13.0"
 subtitle:   "Keep with the development of Docker, and enjoy its advantages"
 date:       2017-02-14
 author:     "Robin"
-header-img: ""
+header-img: "img/post-bg-2015.jpg"
 tags:
     - Docker
 ---
@@ -28,7 +28,7 @@ tags:
 ## Steps to update Docker
 
 1. Get docker-engine-1.13.0-1.el7.centos.x86_64.rpm and docker-engine-selinux-1.13.0-1.el7.centos.noarch.rpm from [Docker Stable Repository](https://yum.dockerproject.org/repo/main/centos/7/Packages/).
-2. Download yum repo http://mirrors.aliyun.com/repo/Centos-7.repo and place it in folder /etc/yum.repo.d/
+2. Download [aliyun yum repo](http://mirrors.aliyun.com/repo/Centos-7.repo) and place it in folder /etc/yum.repo.d/
 3. Create Docker Daemon config file: /etc/docker/daemon.json  
 ```json
 {
