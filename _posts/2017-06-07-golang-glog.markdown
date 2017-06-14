@@ -7,7 +7,7 @@ author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
 tags:
     - Golang
-    - Log
+    - 源码分析
 ---
 
 [Glog](https://github.com/golang/glog)是著名[google开源C++日志库glog](https://github.com/google/glog)的golang版本，具有轻量级、简单、稳定和高效等特性。
