@@ -1,0 +1,203 @@
+---
+layout:     post
+title:      "Kubernetes源码分析：从Command Entrypoint看Google代码风格的一致性"
+subtitle:   "Kubernetes Source Code Reading: Learn Google Consistent Code Style From Command Entrypoint"
+date:       2017-06-28
+author:     "Robin"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - Kubernetes
+    - 源码分析
+---
+
+> The version of Kubernetes source code is **`V1.6.6`**.
+
+Kubernetes是Google主导的一款目前最成功的开源软件，完全使用Google自己发明的开发语言Go编写的。
+现在Kubernetes的代码量已经非常庞大，刚开始看源码的时候，可能的确需要鼓起很大的勇气。不过，在阅读源码过程中，你会慢慢地发现，大到系统架构，小到代码风格，Google对代码犹如艺术品般的追求。
+
+下面以Kubernetes各模块的入口为例，展示Kubernetes代码风格的高度一致性。Kubernetes是通过微服务的方式实现的，因此模块比较多，主要模块包括kube-apiserver、kube-controller-manager、kube-scheduler、kubelet等。
+
+
+# Category
+
+- [Overview](#overview)
+	- [Folder Structure of Code](#folder-structure-of-code)
+	- [Command Entrypoint Template](#command-entrypoint-template)
+
+## Overview
+
+下面以Kubelet为例，介绍kubernetes的command entrypoint的代码风格。
+
+### Folder Structure of Code
+```shell
+# tree cmd/
+cmd/
+├── cloud-controller-manager
+│   ├── app
+│   │   ├── BUILD
+│   │   ├── controllermanager.go
+│   │   └── options
+│   │       ├── BUILD
+│   │       └── options.go
+│   ├── BUILD
+│   └── controller-manager.go
+├── kube-apiserver
+│   ├── apiserver.go
+│   ├── app
+│   │   ├── aggregator.go
+│   │   ├── apiextensions.go
+│   │   ├── BUILD
+│   │   ├── options
+│   │   │   ├── BUILD
+│   │   │   ├── options.go
+│   │   │   ├── options_test.go
+│   │   │   └── validation.go
+│   │   ├── plugins.go
+│   │   ├── preflight
+│   │   │   ├── BUILD
+│   │   │   ├── checks.go
+│   │   │   └── checks_test.go
+│   │   └── server.go
+│   ├── BUILD
+│   └── OWNERS
+├── kube-controller-manager
+│   ├── app
+│   │   ├── apps.go
+│   │   ├── autoscaling.go
+│   │   ├── batch.go
+│   │   ├── bootstrap.go
+│   │   ├── BUILD
+│   │   ├── certificates.go
+│   │   ├── controllermanager.go
+│   │   ├── controller_manager_test.go
+│   │   ├── core.go
+│   │   ├── extensions.go
+│   │   ├── options
+│   │   │   ├── BUILD
+│   │   │   └── options.go
+│   │   ├── plugins.go
+│   │   └── policy.go
+│   ├── BUILD
+│   ├── controller-manager.go
+│   └── OWNERS
+├── kubectl
+│   ├── app
+│   │   ├── BUILD
+│   │   └── kubectl.go
+│   ├── BUILD
+│   ├── kubectl.go
+│   └── OWNERS
+├── kubelet
+│   ├── app
+│   │   ├── auth.go
+│   │   ├── bootstrap.go
+│   │   ├── bootstrap_test.go
+│   │   ├── BUILD
+│   │   ├── options
+│   │   │   ├── BUILD
+│   │   │   ├── container_runtime.go
+│   │   │   └── options.go
+│   │   ├── OWNERS
+│   │   ├── plugins.go
+│   │   ├── server.go
+│   │   ├── server_linux.go
+│   │   ├── server_test.go
+│   │   └── server_unsupported.go
+│   ├── BUILD
+│   ├── kubelet.go
+│   └── OWNERS
+├── kube-proxy
+│   ├── app
+│   │   ├── BUILD
+│   │   ├── conntrack.go
+│   │   ├── server.go
+│   │   └── server_test.go
+│   ├── BUILD
+│   └── proxy.go
+```
+
+无论从目录结构，还是从文件命名上，各模块的command entrypoint都保持着高度的一致。如果需要新增一个模块，甚至可以copy已有模块，只需要简单修改一下具体实现内容，就可以run起来。看完文件框架后，我们再来看一下代码框架，了解需要简单修改的具体实现内容在哪里。
+
+### Command Entrypoint Template
+
+下面是基于Kubelet的源码，屏蔽具体的业务逻辑，提取出来的一个template。从这个template中，可以清晰地看出被所有模块commend entrypoint共同使用的整体架构。
+
+![cmd](/img/in-post/k8s/workflow-of-k8s-cmd-template.png)
+
+[cmd/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/kubelet.go)
+```go
+import (
+	"fmt"
+	"os"
+
+	"k8s.io/apiserver/pkg/util/flag"
+	"k8s.io/apiserver/pkg/util/logs"
+	"k8s.io/kubernetes/cmd/kubelet/app"
+	"k8s.io/kubernetes/cmd/kubelet/app/options"
+	"k8s.io/kubernetes/pkg/version/verflag"
+
+	"github.com/spf13/pflag"
+)
+
+func main() {
+	s := options.NewKubeletServer()
+	s.AddFlags(pflag.CommandLine)
+
+	flag.InitFlags()
+	logs.InitLogs()
+	defer logs.FlushLogs()
+
+	verflag.PrintAndExitIfRequested()
+
+	if err := app.Run(s, nil); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
+```
+
+[cmd/kubelet/app/options/options.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/app/options/options.go)
+```go
+// NewKubeletServer will create a new KubeletServer with default values.
+func NewKubeletServer() *KubeletServer {
+	versioned := &v1alpha1.KubeletConfiguration{}
+	api.Scheme.Default(versioned)
+	config := componentconfig.KubeletConfiguration{}
+	api.Scheme.Convert(versioned, &config, nil)
+	return &KubeletServer{
+		KubeConfig:           flag.NewStringFlag("/var/lib/kubelet/kubeconfig"),
+		RequireKubeConfig:    false, // in 1.5, default to true
+		KubeletConfiguration: config,
+	}
+}
+
+// AddFlags adds flags for a specific KubeletServer to the specified FlagSet
+func (s *KubeletServer) AddFlags(fs *pflag.FlagSet) {
+	// Add the flags
+	......
+	fs.DurationVar(&s.SyncFrequency.Duration, "sync-frequency", s.SyncFrequency.Duration, "Max period between synchronizing running containers and config")
+	fs.DurationVar(&s.FileCheckFrequency.Duration, "file-check-frequency", s.FileCheckFrequency.Duration, "Duration between checking config files for new data")
+	fs.DurationVar(&s.HTTPCheckFrequency.Duration, "http-check-frequency", s.HTTPCheckFrequency.Duration, "Duration between checking http for new data")
+	fs.StringVar(&s.ManifestURL, "manifest-url", s.ManifestURL, "URL for accessing the container manifest")
+	......
+}
+```
+
+[cmd/kubelet/app/server.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/app/server.go)
+```go
+
+func Run(s *options.KubeletServer, kubeDeps *kubelet.KubeletDeps) error {
+	if err := run(s, kubeDeps); err != nil {
+		return fmt.Errorf("failed to run Kubelet: %v", err)
+
+	}
+	return nil
+}
+
+func run(s *options.KubeletServer, kubeDeps *kubelet.KubeletDeps) error {
+	// Start the kubelet with options
+	......
+	
+	return nil
+}
+```
