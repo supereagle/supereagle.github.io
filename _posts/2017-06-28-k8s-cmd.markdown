@@ -23,6 +23,9 @@ Kubernetes是Google主导的一款目前最成功的开源软件，完全使用G
 - [Overview](#overview)
 	- [Folder Structure of Code](#folder-structure-of-code)
 	- [Command Entrypoint Template](#command-entrypoint-template)
+- [Flag Initialization](#flag-initialization)
+- [Log Initialization](#log-initialization)
+
 
 ## Overview
 
@@ -201,3 +204,41 @@ func run(s *options.KubeletServer, kubeDeps *kubelet.KubeletDeps) error {
 	return nil
 }
 ```
+
+## Flag Initialization
+
+[staging/src/k8s.io/apiserver/pkg/util/flag/flags.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/staging/src/k8s.io/apiserver/pkg/util/flag/flags.go#L46-L51)
+```go
+// InitFlags normalizes and parses the command line flags
+func InitFlags() {
+	pflag.CommandLine.SetNormalizeFunc(WordSepNormalizeFunc)
+	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	pflag.Parse()
+}
+```
+
+InitFlags()首先注册一个normalize的function，在`--help`输出参数提示的时候，将所有命令行参数的格式标准化一下。
+然后将标准flag库的CommandLine添加到[pflag](github.com/spf13/pflag)库的FlagSet中，使添加到flag库的命令行参数也可以生效，例如：[glog](github.com/golang/glog)会默认从标准flag库中读取一些log配置相关的命令行参数。但是这里需要提醒一下，只有那些自定义的参数类型才能生效，例如：`verbosity`、`stderrThreshold`和`vmodule`，而那些普通类型的参数是无法生效的，例如`toStderr`和`alsoToStderr`。最后调用`pflag.Parse()`来解析所有命令行参数。
+
+## Log Initialization
+
+[staging/src/k8s.io/apiserver/pkg/util/logs/logs.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/staging/src/k8s.io/apiserver/pkg/util/logs/logs.go#L45-L56)
+```go
+// InitLogs initializes logs the way we want for kubernetes.
+func InitLogs() {
+	log.SetOutput(GlogWriter{})
+	log.SetFlags(0)
+	// The default glog flush interval is 30 seconds, which is frighteningly long.
+	go wait.Until(glog.Flush, *logFlushFreq, wait.NeverStop)
+}
+
+// FlushLogs flushes logs immediately.
+func FlushLogs() {
+	glog.Flush()
+}
+```
+
+InitLogs()通过`GlogWriter`在标准log库与Glog库间搭建了一个bridge，使来自于标准log库的log也能输出到Glog中。
+由于Glog采用的是定时Flush缓冲区的机制将log输出到标准输出或者日志文件，默认的Flush间隔时间是30秒。
+这个间隔时间实在是太长了，会导致log输出严重延时，不清楚Glog为什么采用如此长的默认时间间隔。
+Kubernetes也无法忍受如此长的Flush间隔时间，因此单独起了一个goroutine，每隔5秒主动调用glog.Flush()，强制将日志输出。
