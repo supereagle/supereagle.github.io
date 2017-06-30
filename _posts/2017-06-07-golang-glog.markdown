@@ -18,6 +18,7 @@ tags:
 - [Overview](#overview)
 - [Usage](#usage)
 - [Source Code Reading](#source-code-reading)
+- [flag.Parse()困境](#flag.Parse困境)
 - [Reference](#reference)
 
 ## Overview
@@ -204,8 +205,7 @@ func (l *loggingT) flushDaemon() {
 所有的log都支持多种输出模式，例如，Info\[f\|ln\|Depth\]()，最终都是调用`output()`来输出到log files或者Stderr。
 
 `output()`在输出log的整个过程中都会加锁，以防止写冲突。
-每次都会check是否已调用`flag.Parse()`，否则就不会输出log信息。
-在输出过程中，会根据命令行参数来决定输出行为。如果设置`--toStderr=true`，就只会输出到Stderr。
+每次输出log时都会check是否已调用`flag.Parse()`。如果没有调用就直接将log输出到Stderr，同时在其前面提示`ERROR: logging before flag.Parse: `的错误。如果已经调用就会根据命令行参数来决定输出行为：如果设置`--toStderr=true`，就只会输出到Stderr；
 如果设置`--alsoToStderr=true`，且输出log level大于或等于`--stderrThreshold`的话，
 输出到log file的同时也会输出到Stderr。`stderrThreshold`的默认值是**ERROR**。
 
@@ -350,6 +350,18 @@ func (v Verbose) Infof(format string, args ...interface{}) {
 	}
 }
 ```
+
+## flag.Parse()困境
+
+从上面的源码阅读和原理分析可以了解到，Glog通过标准flag库获取log配置相关参数，并且在每次输出log的时候都会check是否已调用`flag.Parse()`。
+这就将Glog与标准flag库紧密绑定在一起，不仅严格限制了flag库的选择，而且还会与其他flag库存在不可避免的冲突。
+在项目中引入Kubernetes的log和flag机制的时候，发现了这个棘手的问题。Kubernetes能够正常运行，但是自己的代码，无论是否调用`flag.Parse()`，都会存在问题：
+* 为了正常使用glog，就必须调用`flag.Parse()`，但是会出现pflag添加的一些命令行参数不能被解析而出错，因为它们没有被添加到标准flag库的FlagSet中。
+* 为了避免pflag添加的一些命令行参数解析出错，一定不能调用`flag.Parse()`，但是glog输出的时候提示错误。
+
+通过把Kubernetes相关源码，甚至用到的glog，标准flag库以及pflag库的源码都读了一遍，才搞清楚其中的原因。这个问题是由[Glog PR #13](https://github.com/golang/glog/pull/13)引入的，该PR的comments和code reviews中都有人提到，此code change会导致与其他flag库兼容性问题。
+之所以Kubernetes没问题，而自己的代码无论怎样都有问题，是因为我用的是最新的glog库，而Kubernetes用的是比较老的版本，还未引入这个PR。
+因为这个被忽略的细节，我被困惑了好几天，直到把所有相关的代码都看了一遍，才找到问题的根源。这过程中的收获不仅是搞清楚其原理，还吸取了一个很大的教训：**看源码的时候，一定要注意版本，尤其是一些dependency的版本，通过IDE直接跳转过去的代码，可能跟真实使用的并不是一个版本。**
 
 # Reference
 - [Kubernetes Logging Conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
