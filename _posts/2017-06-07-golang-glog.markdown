@@ -204,12 +204,72 @@ func (l *loggingT) flushDaemon() {
 
 所有的log都支持多种输出模式，例如，Info\[f\|ln\|Depth\]()，最终都是调用`output()`来输出到log files或者Stderr。
 
+`Info()`与`Infoln()`没有区别，因为glog为了保证每行只有一条log记录，会主动check末尾是否有换行符，如果没有的话，会自动加上。
+`InfoDepth()`提供的`depth`参数，用来指定log信息中source file number来自的堆栈的深度。当`depth`为0时，就等价于`Info()`。
+由于`depth`的设置很难有一个明确的参考标准，因此`InfoDepth()`不常用。
+
+```go
+func (l *loggingT) println(s severity, args ...interface{}) {
+	buf, file, line := l.header(s, 0)
+	fmt.Fprintln(buf, args...)
+	l.output(s, buf, file, line, false)
+}
+
+func (l *loggingT) print(s severity, args ...interface{}) {
+	l.printDepth(s, 1, args...)
+}
+
+func (l *loggingT) printDepth(s severity, depth int, args ...interface{}) {
+	buf, file, line := l.header(s, depth)
+	fmt.Fprint(buf, args...)
+	if buf.Bytes()[buf.Len()-1] != '\n' {
+		buf.WriteByte('\n')
+	}
+	l.output(s, buf, file, line, false)
+}
+
+func (l *loggingT) printf(s severity, format string, args ...interface{}) {
+	buf, file, line := l.header(s, 0)
+	fmt.Fprintf(buf, format, args...)
+	if buf.Bytes()[buf.Len()-1] != '\n' {
+		buf.WriteByte('\n')
+	}
+	l.output(s, buf, file, line, false)
+}
+
+......
+
+// Info logs to the INFO log.
+// Arguments are handled in the manner of fmt.Print; a newline is appended if missing.
+func Info(args ...interface{}) {
+	logging.print(infoLog, args...)
+}
+
+// InfoDepth acts as Info but uses depth to determine which call frame to log.
+// InfoDepth(0, "msg") is the same as Info("msg").
+func InfoDepth(depth int, args ...interface{}) {
+	logging.printDepth(infoLog, depth, args...)
+}
+
+// Infoln logs to the INFO log.
+// Arguments are handled in the manner of fmt.Println; a newline is appended if missing.
+func Infoln(args ...interface{}) {
+	logging.println(infoLog, args...)
+}
+
+// Infof logs to the INFO log.
+// Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
+func Infof(format string, args ...interface{}) {
+	logging.printf(infoLog, format, args...)
+}
+```
+
 `output()`在输出log的整个过程中都会加锁，以防止写冲突。
 每次输出log时都会check是否已调用`flag.Parse()`。如果没有调用就直接将log输出到Stderr，同时在其前面提示`ERROR: logging before flag.Parse: `的错误。如果已经调用就会根据命令行参数来决定输出行为：如果设置`--toStderr=true`，就只会输出到Stderr；
 如果设置`--alsoToStderr=true`，且输出log level大于或等于`--stderrThreshold`的话，
 输出到log file的同时也会输出到Stderr。`stderrThreshold`的默认值是**ERROR**。
 
-Glog还有另外一个很赞的功能就是，遇到Fatal log会在自动退出程序，并在退出前将所有goroutine的堆栈信息输出，方便排错。因此，在程序需要异常退出的时候，直接调用Fatal\[f\|ln\|Depth\]()，应该成为一种标准做法。K8s都是采用这种方式处理程序异常退出的。
+Glog还有另外一个很赞的功能就是，遇到Fatal log会在自动退出程序，并在退出前将所有goroutine的堆栈信息输出，方便排错。因此，在程序需要异常退出的时候，直接调用Fatal\[f\|ln\|Depth\]()，应该成为一种标准做法。
 
 ```go
 // output writes the data to the log files and releases the buffer.
