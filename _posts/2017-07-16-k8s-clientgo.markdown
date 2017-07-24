@@ -113,6 +113,140 @@ type Clientset struct {
 整个Clientset的数据结构图如下：
 ![clientset](/img/in-post/k8s-clientgo/k8s-clientset-structure.png)
 
-由Clientset获得操作deployment的client的流程图如下：
+## Deployment Example
+
+下面通过官方提供的[deployment example](https://github.com/kubernetes/client-go/blob/release-4.0/examples/create-update-delete-deployment/main.go)，来介绍如何使用Client go来实现deployment的增删改查，展示其实现起来是多么简单：
+* 通过kubeconfig创建clientset
+* 通过clientset创建deployment client
+* 通过deployment client执行deployment的增删改查
+
+由Clientset操作deployment的流程图如下：
 ![clientset](/img/in-post/k8s-clientgo/k8s-clientset-deployment.png)
+
+[New AppsV1beta1Client](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/clientset.go#L158-L164)
+```go
+// AppsV1beta1 retrieves the AppsV1beta1Client
+func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
+	if c == nil {
+		return nil
+	}
+	return c.AppsV1beta1Client
+}
+```
+
+[Create Deployment Client](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/apps_client.go#L26-L45)
+```go
+type AppsV1beta1Interface interface {
+	RESTClient() rest.Interface
+	ControllerRevisionsGetter
+	DeploymentsGetter
+	ScalesGetter
+	StatefulSetsGetter
+}
+
+// AppsV1beta1Client is used to interact with features provided by the apps group.
+type AppsV1beta1Client struct {
+	restClient rest.Interface
+}
+
+func (c *AppsV1beta1Client) ControllerRevisions(namespace string) ControllerRevisionInterface {
+	return newControllerRevisions(c, namespace)
+}
+
+func (c *AppsV1beta1Client) Deployments(namespace string) DeploymentInterface {
+	return newDeployments(c, namespace)
+}
+```
+[kubernetes/typed/apps/v1beta1/deployment.go](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/deployment.go#L28-L60)
+```go
+// DeploymentsGetter has a method to return a DeploymentInterface.
+// A group's client should implement this interface.
+type DeploymentsGetter interface {
+	Deployments(namespace string) DeploymentInterface
+}
+
+// DeploymentInterface has methods to work with Deployment resources.
+type DeploymentInterface interface {
+	Create(*v1beta1.Deployment) (*v1beta1.Deployment, error)
+	Update(*v1beta1.Deployment) (*v1beta1.Deployment, error)
+	UpdateStatus(*v1beta1.Deployment) (*v1beta1.Deployment, error)
+	Delete(name string, options *v1.DeleteOptions) error
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string, options v1.GetOptions) (*v1beta1.Deployment, error)
+	List(opts v1.ListOptions) (*v1beta1.DeploymentList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Deployment, err error)
+	DeploymentExpansion
+}
+
+// deployments implements DeploymentInterface
+type deployments struct {
+	client rest.Interface
+	ns     string
+}
+
+// newDeployments returns a Deployments
+func newDeployments(c *AppsV1beta1Client, namespace string) *deployments {
+	return &deployments{
+		client: c.RESTClient(),
+		ns:     namespace,
+	}
+}
+```
+
+[Operate Deployments](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/deployment.go#L62-L172)
+```go
+// Create takes the representation of a deployment and creates it.  Returns the server's representation of the deployment, and an error, if there is any.
+func (c *deployments) Create(deployment *v1beta1.Deployment) (result *v1beta1.Deployment, err error) {
+	result = &v1beta1.Deployment{}
+	err = c.client.Post().
+		Namespace(c.ns).
+		Resource("deployments").
+		Body(deployment).
+		Do().
+		Into(result)
+	return
+}
+
+// Update takes the representation of a deployment and updates it. Returns the server's representation of the deployment, and an error, if there is any.
+func (c *deployments) Update(deployment *v1beta1.Deployment) (result *v1beta1.Deployment, err error) {
+	result = &v1beta1.Deployment{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("deployments").
+		Name(deployment.Name).
+		Body(deployment).
+		Do().
+		Into(result)
+	return
+}
+...
+
+// Delete takes name of the deployment and deletes it. Returns an error if one occurs.
+func (c *deployments) Delete(name string, options *v1.DeleteOptions) error {
+	return c.client.Delete().
+		Namespace(c.ns).
+		Resource("deployments").
+		Name(name).
+		Body(options).
+		Do().
+		Error()
+}
+...
+```
+
+## Conclusions
+
+目前官方提供的这个Clientset不是特别好用，主要因是获得具体的某个resource client的时候，必须绑定namespace，导致这个client不能访问跨namespace的resource。
+每个resource client最核心的是rest client，对于不同的group，不同namespace以及不同resource，发送的rest请求不一样。
+
+Kubernetes提供的Client go无论是操作不同namespace下的相同resource，还是相同namespace下的不同resource，都得new一个新的client。无法做到一个clientset能够操作所有namespace中的所有resources。这样会严重影响效率，而且会浪费内存资源。
+
+在某些应用场景下，可能需要对不同namespace下的相同类型的resource进行频繁操作，这种实现方式就非常不灵活。
+因此，在我们的PaaS平台没有直接使用原生的Client go，而是自己封装了一个clientset上，针对每类resource都有一个通用的client。该clientset直接提供操作所有类型的resources的接口，在调用操作具体resources接口的时候，通过参数指定namespace，从而实现一个clientset能够统一地操作所有namespace中的所有resources。具体实现，可以参考[k8s-goclient](https://github.com/supereagle/go-example/tree/master/k8s-goclient)。
+
+
+
+
+
 
