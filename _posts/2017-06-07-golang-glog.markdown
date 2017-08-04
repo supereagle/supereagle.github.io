@@ -19,6 +19,7 @@ tags:
 - [Usage](#usage)
 - [Source Code Reading](#source-code-reading)
 - [flag.Parse()困境](#flag.Parse困境)
+- [Comparation](#comparation)
 - [Reference](#reference)
 
 ## Overview
@@ -422,6 +423,12 @@ func (v Verbose) Infof(format string, args ...interface{}) {
 通过把Kubernetes相关源码，甚至用到的glog，标准flag库以及pflag库的源码都读了一遍，才搞清楚其中的原因。这个问题是由[Glog PR #13](https://github.com/golang/glog/pull/13)引入的，该PR的comments和code reviews中都有人提到，此code change会导致与其他flag库兼容性问题。
 之所以Kubernetes没问题，而自己的代码无论怎样都有问题，是因为我用的是最新的glog库，而Kubernetes用的是比较老的版本，还未引入这个PR。
 因为这个被忽略的细节，我被困惑了好几天，直到把所有相关的代码都看了一遍，才找到问题的根源。这过程中的收获不仅是搞清楚其原理，还吸取了一个很大的教训：**看源码的时候，一定要注意版本，尤其是一些dependency的版本，通过IDE直接跳转过去的代码，可能跟真实使用的并不是一个版本。**
+
+# Comparation
+
+目前Golang常用的log库有三种，除了本文介绍的glog，还有Golang官方的库[log](https://github.com/golang/go/tree/master/src/log)和第三方库[logru](https://github.com/sirupsen/logrus)。
+在[go-example/log](https://github.com/supereagle/go-example/tree/master/log)中，通过详细的例子，介绍了它们的使用以及各自的特性，同时对它们进行了全面地分析。在实践中，需要根据它们在使用难易程度、优势和劣势等方面的特点，结合自己实际需求进行合理的选择。
+
 
 # Reference
 - [Kubernetes Logging Conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md)
