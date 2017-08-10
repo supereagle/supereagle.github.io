@@ -5,23 +5,12 @@ subtitle:   "An Efficient Serializing Method for Structured Data: Google Protoco
 date:       2017-04-19
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Protocol Buffers
     - Serialization
     - gRPC
 ---
-
-# Category
-
-- [Advantages](#advantages)
-- [Usage](#usage)
-	- [Protocol Compiler Installation](#protocol-compiler-installation)
-	- [Protobuf Runtime Installation](#protobuf-runtime-installation)
-	- [Define Message Type](#define-message-type)
-	- [Generate Message Classes](#generate-message-classes)
-	- [Write/Read Messages](#write-read-messages)
-- [Proto3 vs Proto2](#proto3-vs-proto2)
-- [Reference](#reference)
 
 Protocol Buffers是Google开源的一种针对结构化数据的跨平台、跨语言、可扩展的序列化方法。
 目前，Protocol Buffers已经成为Google通用的数据模型，实际使用中有48K个不同message类型，并在ETCD，Docker和Kubernetes等热门开源项目中得到广泛使用。

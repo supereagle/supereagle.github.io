@@ -5,19 +5,12 @@ subtitle:   "Use Contiv as CNI Network in Kubernetes Cluster"
 date:       2017-03-27
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Kubernetes
     - CNI
     - Contiv
 ---
-
-# Category
-
-- [Contiv Configuration](#contiv-configuration)
-	- [Contiv Master](#contiv-master)
-	- [Contiv Netplugin](#contiv-netplugin)
-- [Kubernetes Configuration](#kubernetes-configuration)
-- [Reference](#reference)
 
 ## Contiv Configuration
 

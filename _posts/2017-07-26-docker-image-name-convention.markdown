@@ -5,21 +5,10 @@ subtitle:   "Docker Image Name Convention for Enterprise Docker Registry"
 date:       2017-07-26
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Docker
 ---
-
-# Category
-
-- [Target](#target)
-- [Background](#background)
-	- [Image Types](#image-types)
-	- [Image Sources](#image-sources)
-- [Conventions](#conventions)
-	- [Format of Image Name](#format-of-image-name)
-	- [Convention of Image Name](#convention-of-image-name)
-- [Authority Management](#authority-management)
-- [Quota Management](#quota-management)
 
 ## Target
 

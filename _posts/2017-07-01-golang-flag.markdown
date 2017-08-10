@@ -5,22 +5,13 @@ subtitle:   "Golang Flag Library Source Code Reading: flag VS pflag"
 date:       2017-07-01
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Golang
     - 源码分析
 ---
 
 Golang官方的命令行参数解析库flag，已经用的比较少。而是Google的一位Golang大牛Steve Francia自己写的命令行参数解析库[pflag](https://github.com/spf13/pflag)更加优秀，从而得到广泛使用。下面从源码的角度对它们的工作原理进行分析，同时对它们的功能进行一个全面的比较。
-
-# Category
-
-- [Golang Flag](#golang-flag)
-	- [Flag Types](#flag-types)
-	- [Flag Data Structure](#flag-data-structure)
-- [How to Work](#how-to-work)
-	- [Flag Defination](#flag-defination)
-	- [Flag Parse](#flag-parse)
-- [pflag VS flag](#pflag-vs-flag)
 
 ## Golang Flag
 

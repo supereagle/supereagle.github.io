@@ -5,6 +5,7 @@ subtitle:   "Contiv Source Code Reading: Netplugin"
 date:       2017-03-26
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Contiv
     - Docker
@@ -12,16 +13,6 @@ tags:
 ---
 
 > The version of Contiv source code is **`v1.0.0-alpha-01-28-2017.10-23-11.UTC`**.
-
-# Category
-
-- [程序启动](#程序启动)
-- [Netplugin功能组件](#netplugin功能组件)
-	- [Agent](#agent)
-	- [StateDriver](#statedriver)
-	- [NetworkDriver](#networkdriver)
-	- [Orchestration Plugin](#orchestration-plugin)
-	- [contivk8s](#contivk8s)
 
 ## 程序启动
 

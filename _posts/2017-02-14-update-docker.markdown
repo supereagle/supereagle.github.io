@@ -5,12 +5,12 @@ subtitle:   "Keep with the development of Docker, and enjoy its advantages"
 date:       2017-02-14
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Docker
 ---
 
 从2015年3月份将Docker升级到v1.10.3，已经在生产环境中使用了近一年的时间。从整体上看，该版本还是比较稳定的，虽然没有出现过重大问题，但是，也发现了一些小的不足。随着Docker的快速发展，被其一些新的特性所吸引，所有决定将Docker进行一次大的升级，直接升级到最新版的v1.13.0。
-
 
 ## Issues or shortages in Docker v1.10.3
 

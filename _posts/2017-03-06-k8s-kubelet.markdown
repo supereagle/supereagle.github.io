@@ -5,6 +5,7 @@ subtitle:   "Kubernetes Source Code Reading: Kubelet"
 date:       2017-03-06
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Docker
     - Kubernetes
@@ -13,22 +14,6 @@ tags:
 ---
 
 > The version of Kubernetes source code is **`V1.5.3`**.
-
-# Category
-
-- [Kubelet功能组件](#kubelet功能组件)
-	- [PodWorkers](#podworkers)
-	- [PodManager](#podmanager)
-	- [PodDNS](#podDNS)
-	- [StatusManager](#statusmanager)
-	- [containerRuntime](#containerruntime)
-	- [ImageGC](#imagegc)
-	- [ContainerGC](#containerGC)
-	- [NetworkPlugin](#networkPlugin)
-- [Kubelet工作原理](#kubelet工作原理)
-	- [Pod创建过程](#pod创建过程)
-- [Reference](#reference)
-
 
 ## Kubelet功能组件
 

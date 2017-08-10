@@ -4,19 +4,12 @@ title:      "微服务架构中Auth Server设计"
 subtitle:   "基于OAuth 2.0的Pluggable认证授权系统的设计"
 date:       2017-02-06
 author:     "Robin"
-header-img: ""
+header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - OAuth
     - Microservice
 ---
-
-## Catagory
-
-- [微服务架构中的Auth Server](#微服务架构中的auth-server)
-- [Auth Server系统设计](#auth-server系统设计)
-	- [OAuth流程](#OAuth流程)
-	- [Plugable Auth Server系统设计](#plugable-auth-server系统设计)
-- [Reference](#reference)
 
 ## 微服务架构中的Auth Server
 微服务架构的系统中，每个服务只负责单一的一小块业务。如果该业务中的资源涉及到权限控制，就需要通过统一的Auth Server进行权限管理。多个服务中的业务逻辑不一样，涉及需要保护的资源也不一样。如果Auth Server中使用统一的一套权限管理规则，就会存在复杂、冗余和不易扩展的问题。通过Pluggable的Auth Server设计，使每个业务的认证授权是可插拔的。因此，每个微服务中只需要关心和实现自己业务相关的权限管理，同时Auth Server中各业务的权限管理相互独立、互不干扰。

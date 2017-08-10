@@ -5,6 +5,7 @@ subtitle:   "Kubernetes Source Code Reading: Client-go"
 date:       2017-07-16
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Kubernetes
     - 源码分析

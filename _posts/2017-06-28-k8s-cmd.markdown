@@ -5,6 +5,7 @@ subtitle:   "Kubernetes Source Code Reading: Learn Google Consistent Code Style 
 date:       2017-06-28
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Kubernetes
     - 源码分析
@@ -16,16 +17,6 @@ Kubernetes是Google主导的一款目前最成功的开源软件，完全使用G
 现在Kubernetes的代码量已经非常庞大，刚开始看源码的时候，可能的确需要鼓起很大的勇气。不过，在阅读源码过程中，你会慢慢地发现，大到系统架构，小到代码风格，Google对代码犹如艺术品般的追求。
 
 下面以Kubernetes各模块的入口为例，展示Kubernetes代码风格的高度一致性。Kubernetes是通过微服务的方式实现的，因此模块比较多，主要模块包括kube-apiserver、kube-controller-manager、kube-scheduler、kubelet等。
-
-
-# Category
-
-- [Overview](#overview)
-	- [Folder Structure of Code](#folder-structure-of-code)
-	- [Command Entrypoint Template](#command-entrypoint-template)
-- [Flag Initialization](#flag-initialization)
-- [Log Initialization](#log-initialization)
-
 
 ## Overview
 

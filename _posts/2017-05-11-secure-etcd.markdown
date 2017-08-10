@@ -5,23 +5,11 @@ subtitle:   "How to Setup Secure ETCD Cluster"
 date:       2017-05-11
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Security
     - ETCD
 ---
-
-# Category
-
-- Generate Self-signed Certificates
-	- Install cfssl
-	- Generate Self-signed CA
-	- Generate Server Self-signed Key Pairs
-	- Generate Client Self-signed Key Pairs
-- Config ETCD Cluster
-	- Example
-	- Verification
-- Config Kubernetes for Secure ETCD Cluster
-- Reference
 
 在容器云平台中，除了Docker以外，ETCD是另外一个必不可少的组件。许多知名开源项目都依赖ETCD作为其键值存储，例如[Kubernetes](https://github.com/kubernetes/kubernetes),[Swarm](https://github.com/docker/swarm)以及[Contiv](https://github.com/contiv/netplugin)等。
 ETCD同时是一个非常关键性的组件，容器云平台中的其他组件无时无刻不在跟ETCD打交道。例如，Kubernetes将集群的所有配置，状态，资源等信息都存在ETCD集群中，甚至组件间不是通过API直接通信，而是通过Watch ETCD变化来通信，从而减少组件间的耦合。

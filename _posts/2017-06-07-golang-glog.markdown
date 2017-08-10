@@ -5,6 +5,7 @@ subtitle:   "Golang Log Library Source Code Reading: Glog"
 date:       2017-06-07
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Golang
     - 源码分析
@@ -12,15 +13,6 @@ tags:
 
 [Glog](https://github.com/golang/glog)是著名[google开源C++日志库glog](https://github.com/google/glog)的golang版本，具有轻量级、简单、稳定和高效等特性。
 目前被用在大型的容器云开源项目[Kubernetes](https://github.com/kubernetes/kubernetes)中。
-
-# Category
-
-- [Overview](#overview)
-- [Usage](#usage)
-- [Source Code Reading](#source-code-reading)
-- [flag.Parse()困境](#flag.Parse困境)
-- [Comparation](#comparation)
-- [Reference](#reference)
 
 ## Overview
 

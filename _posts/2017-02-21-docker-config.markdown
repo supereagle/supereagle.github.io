@@ -4,23 +4,11 @@ title:      "Docker Daemon Configuration"
 subtitle:   "A better way to config Docker Daemon"
 date:       2017-02-21
 author:     "Robin"
-header-img: ""
+header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Docker
 ---
-
-## Category
-
-- [Installation](#installation)
-	- [Check Prerequisites](#check-prerequisites)
-	- [Install from Docker’s Repositories](#install-from-dockers-repositories)
-	- [Install from Docker binaries](#install-from-docker-binaries)
-- [Configuration](#configuration)
-	- [Useful Options](#useful-options)
-	- [Configuration for Docker v1.10.3](#configuration-for-docker-v1.10.3)
-	- [Configuration for Docker v1.13.0](#configuration-for-docker-v1.13.0)
-- [Reference](#reference)
-
 
 ## Installation
 

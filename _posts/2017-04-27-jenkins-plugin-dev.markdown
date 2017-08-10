@@ -5,17 +5,10 @@ subtitle:   "Jenkins Plugin Development Guide"
 date:       2017-04-27
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Jenkins
 ---
-
-# Category
-
-- [环境准备](#环境准备)
-- [导入项目](#导入项目)
-- [测试](#测试)
-- [构建](#构建)
-- [Reference](#reference)
 
 ## 环境准备
 所有Jenkins plugin都是java开发的Maven项目，需要准备如下环境：

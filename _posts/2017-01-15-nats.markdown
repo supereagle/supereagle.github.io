@@ -4,26 +4,12 @@ title:      "NATS消息系统"
 subtitle:   "开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统"
 date:       2017-01-15
 author:     "Robin"
-header-img: "/img/in-post/nats/nats.jpg"
+header-img: "img/in-post/nats/nats.jpg"
+catalog: true
 tags:
     - NATS
     - Message
 ---
-
-## Catagory
-
-- [概述](#概述)
-	- [简介](#简介)
-	- [优势和劣势](#优势和劣势)
-- [NATS Messaging](#nats-messaging)
-	- [Subscriber处理消息模式](#Subscriber处理消息模式)
-	- [消息模式](#消息模式)
-- [NATS Protocol](#nats-protocol)
-	- [协议约定](#协议约定)
-	- [协议操作](#协议操作)
-- [Demo](#demo)
-	- [实验环境](#实验环境)
-	- [实验演示](#实验演示)
 
 ## 概述
 NATS是一个开源、安全、轻量级、可伸缩、高性能的分布式消息通信系统。NATS服务器是Golang语言开发，客户端由官方和社区提供了10多种语言的客户端。

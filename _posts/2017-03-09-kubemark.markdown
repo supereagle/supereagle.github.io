@@ -5,19 +5,12 @@ subtitle:   "Kubemark: Performance Test Tool for Your Kubernetes Cluster"
 date:       2017-03-09
 author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
+catalog: true
 tags:
     - Kubernetes
     - Kubemark
     - Performance
 ---
-
-## Category
-
-- [测试设计](#测试设计)
-- [Prepare Environment](#prepare-environment)
-- [Run Kubemark](#run-kubemark)
-- [Trouble Shootings](#trouble-shootings)
-- [Reference](#reference)
 
 [Kubemark](https://github.com/kubernetes/community/blob/master/contributors/devel/kubemark-guide.md)是K8s官方提供的一个对K8s集群进行性能测试的工具。它可以模拟出一个K8s cluster（Kubemark cluster），不受资源限制，从而能够测试的集群规模比真实集群大的多。这个cluster中master是真实的机器，所有的nodes是Hollow nodes。Hollow nodes执行的还是真实的K8s程序，只是不会调用Docker，因此测试会走一套K8s API调用的完整流程，但是不会真正创建pod。
 
