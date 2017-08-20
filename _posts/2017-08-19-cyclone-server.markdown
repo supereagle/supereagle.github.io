@@ -342,3 +342,191 @@ func workerPushLogHandler(sReceiveFrom string, jsonPacket []byte) {
 	kafka.Produce(workerPushLog.Topic, []byte(workerPushLog.Log))
 }
 ```
+
+### Event Manager
+
+API-server收到一些任务请求之后，首先写入ETCD中，然后由event manager watch ETCD中的`/events/unfinished/`，最后对这些event进行处理。引入ETCD的主要目的是防止任务太多或者任务执行时间过长，系统负载过高导致一些任务丢失的情况。其实可以简单地认为是一个任务队列，起到提高系统稳定性和可靠性的作用。
+
+[event/manager.go](https://github.com/caicloud/cyclone/blob/master/event/manager.go)
+```go
+// Init init event manager
+// Step1: init event operation map
+// Step2: new a etcd client
+// Step3: load unfinished events from etcd
+// Step4: create a unfinished events watcher
+// Step5: new a remote api manager
+func Init(wopts *cloud.WorkerOptions, cloudAutoDiscovery bool) {
+
+	initCloudController(wopts, cloudAutoDiscovery)
+
+	initOperationMap()
+
+	etcdClient := etcd.GetClient()
+
+	if !etcdClient.IsDirExist(EventsUnfinished) {
+		err := etcdClient.CreateDir(EventsUnfinished)
+		if err != nil {
+			log.Errorf("init event manager create events dir err: %v", err)
+			return
+		}
+	}
+
+	GetList().loadListFromEtcd(etcdClient)
+	initPendingQueue()
+
+	go watchEtcd(etcdClient)
+	go handlePendingEvents()
+
+	remoteManager = remote.NewManager()
+}
+......
+// watchEtcd watch unfinished events status change in etcd
+func watchEtcd(etcdClient *etcd.Client) {
+	watcherUnfinishedEvents, err := etcdClient.CreateWatcher(EventsUnfinished)
+	if err != nil {
+		log.Fatalf("watch unfinshed events err: %v", err)
+	}
+
+	for {
+		change, err := watcherUnfinishedEvents.Next(context.Background())
+		if err != nil {
+			log.Fatalf("watch unfinshed events next err: %v", err)
+		}
+
+		switch change.Action {
+		case etcd.WatchActionCreate:
+			log.Infof("watch unfinshed events create: %s\n", change.Node)
+			event, err := loadEventFromJSON(change.Node.Value)
+			if err != nil {
+				log.Errorf("analysis create event err: %v", err)
+				continue
+			}
+			eventCreateHandler(&event)
+
+		case etcd.WatchActionSet:
+			log.Infof("watch unfinshed events set: %s\n", change.Node.Value)
+			event, err := loadEventFromJSON(change.Node.Value)
+			if err != nil {
+				log.Errorf("analysis set event err: %v", err)
+				continue
+			}
+
+			if change.PrevNode == nil {
+				eventCreateHandler(&event)
+			} else {
+				preEvent, preErr := loadEventFromJSON(change.PrevNode.Value)
+				if preErr != nil {
+					log.Errorf("analysis set pre event err: %v", preErr)
+					continue
+				}
+				eventChangeHandler(&event, &preEvent)
+			}
+
+		case etcd.WatchActionDelete:
+			log.Infof("watch finshed events delete: %s\n", change.PrevNode)
+			event, err := loadEventFromJSON(change.PrevNode.Value)
+			if err != nil {
+				log.Errorf("analysis delete event err: %v", err)
+				continue
+			}
+			eventRemoveHandler(&event)
+
+		default:
+			log.Warnf("watch unknow etcd action(%s): %v", change.Action, change)
+		}
+	}
+}
+
+// eventCreateHandler handler when watched a event created
+func eventCreateHandler(event *api.Event) {
+	GetList().addUnfinshedEvent(event)
+	pendingEvents.In(event)
+
+	return
+}
+
+// eventChangeHandler handler when watched a event changed
+func eventChangeHandler(event *api.Event, preEvent *api.Event) {
+	GetList().addUnfinshedEvent(event)
+
+	// event handle finished
+	if !IsEventFinished(preEvent) && IsEventFinished(event) {
+		postHookEvent(event)
+		etcdClient := etcd.GetClient()
+		err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
+		if err != nil {
+			log.Errorf("delete finished event err: %v", err)
+		}
+	}
+}
+
+// eventChangeHandler handler when watched a event removed
+func eventRemoveHandler(event *api.Event) {
+	GetList().removeEvent(event.EventID)
+}
+......
+// handlePendingEvents polls event queues and handle events one by one.
+func handlePendingEvents() {
+	for {
+		if pendingEvents.IsEmpty() {
+			time.Sleep(time.Second * 1)
+			continue
+		}
+
+		event := *pendingEvents.GetFront()
+		err := handleEvent(&event)
+		if err != nil {
+			if cloud.IsAllCloudsBusyErr(err) {
+				log.Info("All system worker are busy, wait for 10 seconds")
+				time.Sleep(time.Second * 10)
+				continue
+			}
+
+			// remove the event from queue which had run
+			pendingEvents.Out()
+
+			event.Status = api.EventStatusFail
+			event.ErrorMessage = err.Error()
+			log.Error("handle event err", log.Fields{"error": err, "event": event})
+			postHookEvent(&event)
+			etcdClient := etcd.GetClient()
+			err := etcdClient.Delete(EventsUnfinished + string(event.EventID))
+			if err != nil {
+				log.Errorf("delete finished event err: %v", err)
+			}
+			continue
+		}
+
+		// remove the event from queue which had run
+		pendingEvents.Out()
+		event.Status = api.EventStatusRunning
+		ds := store.NewStore()
+		defer ds.Close()
+		if event.Operation == "create-version" {
+			event.Version.Status = api.VersionRunning
+			if err := ds.UpdateVersionDocument(event.Version.VersionID, event.Version); err != nil {
+				log.Errorf("Unable to update version status post hook for %+v: %v", event.Version, err)
+			}
+		}
+		SaveEventToEtcd(&event)
+	}
+}
+```
+
+Event manager会在server启动的时候进行init，init的主要操作是：
+* initOperationMap()：为create-service和create-version这两种operation的event指定handler和postHook。
+* initPendingQueue()：从ETCD中list所有event，并将pending状态的event加入pending queue中。
+* watchEtcd(etcdClient)：单独起协程来watch ETCD中event的状态变化。
+* handlePendingEvents()：单独起协程来处理pending queue中的任务。
+
+watchEtcd(etcdClient)协程的主要工作是不断地watch ETCD中unfinished event的状态变化，包括create、update和delete，分别调用响应的handler进行处理：
+* create：将该event添加到event list和pending event queue中。
+* update：将该event添加到event list中，如果状态由unfinished变为finished，触发postHook，并从ETCD中删除该event。
+* delete：将该event从event list中删除。
+
+handlePendingEvents()协程的主要工作是不断地处理pending queue中的任务：
+* 如果pending queue非空，获得第一个event进行处理
+* 如果是cloud busy错误，就等待10s后继续处理该event
+* 如果处理失败，就从pending queue和ETCD中删除该任务，同时更新event status，并执行postHook
+* 如果处理成功，从pending queue中删除该任务，如果event是`create-version`操作，还会在MongoDB创建version记录
+* 最后更新event的状态到ETCD中
