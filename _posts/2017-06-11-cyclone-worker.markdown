@@ -31,14 +31,14 @@ Cyclone从版本控制服务器（例如：gitlab，github等）上获取源码�
 
 Cyclone-Server主要功能：
 * 负责统一对外提供Restful API服务
-* 作为Log server，从Kafka中pull log并返回给用户
-* 管理所有项目信息，并持久化到MongoDB中
+* 作为Log server，接受来自Cyclone-Worker的log，并从Kafka中pull log返回给用户
+* 管理所有项目信息和执行结果，并持久化到MongoDB中
 * WorkerManager根据待处理事件动态地启动Cyclone-Worker
 
 Cyclone-Worker主要功能：
 * 拉取并解析待处理事件
 * 为每个阶段启动新的容器来执行该阶段任务，并反馈执行结果
-* 收集各阶段的执行日志，并发送到Kafka
+* 收集各阶段的执行日志，并发送到Cyclone-Server
 
 Cyclone-Server会将处理时间较长的待处理任务写入ETCD，EventManager会watch ETCD中待处理任务的变化，
 并将新增的待处理任务发送给WorkerManager。WorkerManager会调用Docker API，以容器的方式启动Cyclone-Worker，并将需要的相关参数通过环境变量的方式传入。
@@ -58,7 +58,7 @@ Cyclone-Worker启动后会立即根据Event Id，通过`getEvent()`向Cyclone-Se
 `Parse()`从Event中解析出任务步骤的节点树（Node Tree）。Node Tree主要包含3种类型的节点：
 - **ListNode**: Holds a sequence of nodes.
 - **DockerNode**: Build process should run in Docker container.
-- **DeployNode**: For deploy section in yml.
+- **DeployNode**: For deploy section in yaml.
 
 从Node Tree的根节点，递归地处理树上所有node。大部分构建步骤都是`DockerNode`类型，下面重点对这种类型的构建步骤的实现进行分析。
 大致步骤一般如下：
@@ -283,7 +283,7 @@ func run(b *Build, cco *docker_client.CreateContainerOptions,
 # 评价
 
 Cyclone基于容器实现了CI/CD，基本支持了持续构建、持续集成和持续部署。采用Master/Slave的架构，具有很好的可扩展性；
-将长时间任务缓存到ETCD，提供了整个系统的稳定性和可靠性；通过Kafka收集和存储日志，也是一种很好的日志持久化的解决方案。
+将长时间任务缓存到ETCD，提供了整个系统的稳定性和可靠性；通过Kafka收集和存储运行过程中的日志，也是一种较好的日志实时展示的解决方案。
 Cyclone-Worker的实现思想与[Openshift Source-To-Image (S2I)](https://github.com/openshift/source-to-image)类似，可能在一定程度上有参考和借鉴。
 
-个人认为，Cyclone在某些地方仍有改进的空间。自动化测试是CI/CD中不可或缺的环节，包括构建时的单元测试，部署后的集成测试以及性能测试，测试结果的持久化和展示也是一个非常重要的问题，而Cyclone这方面支持的比较少。每个步骤都重启启动一个容器，甚至从容器中将构建的outputs copy处理之后来build image。这样的成本比较高，严重影响效率，为什么不能直接在一个容器中把整个过程都跑完呢？Cyclone给出的解释是为了避免Docker in Docker，同时为了避免构建出来的image包含不必要的构建依赖，减小image size。本人认为这两个问题都有解决方案可以避免，更可能的原因是为了单独收集每个阶段的日志。
+个人认为，Cyclone在某些地方仍有改进的空间。系统比较复杂，引入Kafka、Zookeeper等比较重的组件，而它们仅仅只是为了解决日志实时展示的问题。自动化测试是CI/CD中不可或缺的环节，包括构建时的单元测试，部署后的集成测试以及性能测试，测试结果的持久化和展示也是一个非常重要的问题，而Cyclone这方面支持的比较少。每个步骤都重启启动一个容器，甚至从容器中将构建的outputs copy处理之后来build image。这样的成本比较高，严重影响效率，为什么不能直接在一个容器中把整个过程都跑完呢？Cyclone给出的解释是为了避免Docker in Docker，同时为了避免构建出来的image包含不必要的构建依赖，减小image size。本人认为这两个问题都有解决方案可以避免，更可能的原因是为了单独收集每个阶段的日志。
