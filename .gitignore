@@ -1,1 +1,5 @@
+# Dirty file in OS X
+.DS_Store
+
+# Genereated folder for website
 _site
