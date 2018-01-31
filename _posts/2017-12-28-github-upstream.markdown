@@ -25,6 +25,15 @@ tags:
 4. 从fork的项目中为自己的代码创建PR；
 5. 等这个PR被merge后，自己的代码才能进入开源项目。
 
+[Golang解析依赖的算法](http://lucasfcosta.com/2017/02/07/Understanding-Go-Dependency-Management.html)：
+1. 如果当前目录下有vendor，就在当前目录下找
+2. 如果当前目录下没有vendor，就在其父目录下找vendor
+3. 重复步骤2，直到找到$GOPATH/src
+4. 在$GOROOT中找
+5. 在$GOROOT/src中找
+
+> 注：上面任何一步中找到了依赖，就不再继续往下找。
+
 举个栗子🌰，以才云的开源项目[Cyclone](https://github.com/caicloud/cyclone)为例，来演示整个过程。为描述清晰、方便，有如下约定：
 * 上游项目为caicloud/cyclone
 * fork项目为supereagle/cyclone
@@ -153,3 +162,7 @@ From https://github.com/caicloud/cyclone
 
 本文以参与Golang开源项目中遇到的依赖问题为背景，介绍了一套新的Github upstream和fork项目的管理方法，解决依赖查找的问题。
 其实，这套方法不局限于Golang项目，同时适用于任何语言的开源项目，能够帮助高效、快捷地在upstream和fork项目中协作。
+
+## References
+
+- [Understanding Dependency Management in Go](http://lucasfcosta.com/2017/02/07/Understanding-Go-Dependency-Management.html)
