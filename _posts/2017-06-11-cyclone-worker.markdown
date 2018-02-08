@@ -11,6 +11,8 @@ tags:
     - 源码分析
 ---
 
+> The version of Cyclone source code is **`v0.2`**.
+
 [Cyclone](https://github.com/caicloud/cyclone)是[才云科技](https://caicloud.io/)于2016年11月
 开源的一款容器化CI/CD平台。它完全在容器中完成应用的构建、集成和部署，能够定义应用间的依赖关系。
 Cyclone采用Master/Slave的架构，master是Cyclone-Server，主要负责应用的管理和发布任务的调度；slave是Cyclone-Worker，主要负责执行具体的发布任务。本文主要从源码角度分析Cyclone-Worker的实现。
