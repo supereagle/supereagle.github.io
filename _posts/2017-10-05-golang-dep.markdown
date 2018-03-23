@@ -177,6 +177,29 @@ This happens when a new import is added. Run `dep ensure` to install the missing
 After import new dependency in code or add directly add it into `Gopkg.toml`, `dep status` will find that they are
 missing in `Gopkg.lock`, and suggest you to run `dep ensure` to update lock file and install missing dependencies.
 
+## Troubleshooting
+
+* Fail to checkout version
+
+Error:
+
+```
+Unable to update checked out version: : command failed: [git checkout 9f8ebd171479bec0ada837d7ee641dec2f8c6dd1]: exit status 1
+```
+
+Solution:
+
+```
+# echo $GOPATH
+/Users/robin/gocode
+# cd $GOPATH/pkg/dep
+# ls -l
+drwxr-xr-x  10 robin  staff  340  3 23 16:08 darwin_amd64        # Some deps are cached here, also need to remove them.
+drwxr-xr-x   5 robin  staff  170  3 23 16:08 dep                 # Cached deps
+drwxr-xr-x   3 root   staff  102  9  1  2017 linux_amd64         # 
+# rm -rf $GOPATH/pkg/dep
+```
+
 ## Reference
 
 - [Golang Package Management Tools](https://github.com/golang/go/wiki/PackageManagementTools)
