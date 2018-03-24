@@ -200,6 +200,42 @@ drwxr-xr-x   3 root   staff  102  9  1  2017 linux_amd64         #
 # rm -rf $GOPATH/pkg/dep
 ```
 
+* 传递依赖版本不符
+
+依赖的依赖（传递依赖）不满足版本要求，从依赖的版本管理信息中，获得传递依赖的版本信息。然后在 `Gopkg.toml` 中通过 `override` 明确指定传递依赖的版本。
+
+例如，通过 `dep init` 之后，仍然存在如下依赖问题：
+```
+# github.com/caicloud/cyclone/vendor/github.com/docker/docker/oci
+vendor/github.com/docker/docker/oci/defaults_linux.go:19:11: unknown field 'Platform' in struct literal of type specs.Spec
+vendor/github.com/docker/docker/oci/defaults_linux.go:62:25: cannot use []string literal (type []string) as type *specs.LinuxCapabilities in assignment
+vendor/github.com/docker/docker/oci/defaults_linux.go:96:17: undefined: specs.Namespace
+vendor/github.com/docker/docker/oci/defaults_linux.go:107:14: undefined: specs.Device
+vendor/github.com/docker/docker/oci/defaults_linux.go:108:15: undefined: specs.Resources
+vendor/github.com/docker/docker/oci/devices_linux.go:15:32: undefined: specs.Device
+vendor/github.com/docker/docker/oci/devices_linux.go:27:38: undefined: specs.DeviceCgroup
+vendor/github.com/docker/docker/oci/devices_linux.go:39:85: undefined: specs.Device
+vendor/github.com/docker/docker/oci/devices_linux.go:39:116: undefined: specs.DeviceCgroup
+vendor/github.com/docker/docker/oci/namespaces.go:6:44: undefined: specs.NamespaceType
+vendor/github.com/docker/docker/oci/defaults_linux.go:108:15: too many errors
+github.com/caicloud/cyclone/vendor/github.com/zoumo/register
+```
+
+根据错误提示，找到 Docker 依赖的 github.com/opencontainers/runtime-spec 存在版本不一致的问题。
+当前 Docker 使用的版本是 `v1.13.1`， 根据其依赖管理工具记录的依赖版本信息 [vendor.conf](https://github.com/moby/moby/blob/v1.13.1/vendor.conf#L64)，
+获得 github.com/opencontainers/runtime-spec 的准确版本号应该是 `1c7c27d043c2a5e513a44084d2b10d77d1402b8c`。因此，在 `Gopkg.toml` 中添加如下内容：
+
+```
+[[override]]
+  name = "github.com/opencontainers/runtime-spec"
+  revision = "1c7c27d043c2a5e513a44084d2b10d77d1402b8c"
+```
+
+说明：
+
+* 因为指定的是传递依赖的信息，所以使用的是 `override`
+* 因为直接指定的是commit id，所以使用的是 `revision`
+
 ## Reference
 
 - [Golang Package Management Tools](https://github.com/golang/go/wiki/PackageManagementTools)
