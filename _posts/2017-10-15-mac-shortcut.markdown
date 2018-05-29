@@ -25,6 +25,9 @@ tags:
 
 ![symbol table](/img/in-post/mac-shortcut/symbol-table.png)
 
+输入特殊符号: ⌘⌃space
+
+![symbol input](/img/in-post/mac-shortcut/symbol-input.png)
 
 ## Category
 
@@ -66,6 +69,8 @@ Notes:
 
 ### 截图操作
 
+> 微信快捷键截图更方便：⌘⌃A
+
 | Shortcut | Function |
 |:--------:|:--------:|
 |    ⌘⇧4   |   截取所选屏幕区域到文件   |
@@ -91,7 +96,16 @@ Notes:
 |    ⌘A    |   全选   |
 |    ⌘S    |   保存   |
 |    ⌘F    |   查找   |
+|   ⌘⇧C    |   打开电脑  |
+|   ⌘⇧D    |   打开桌面  |
+|   ⌘⇧F    |   打开所有文件  |
+|   ⌘⇧G    |   直接访问路径  |
+|   ⌘⇧H    |   打开个人目录  |
 
 Notes：
 
 * `←`收起文件夹；`→`展开文件夹
+
+## Reference
+
+- [Mac 键盘快捷键](https://support.apple.com/zh-cn/HT201236)
