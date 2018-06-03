@@ -25,7 +25,7 @@ HTTP Request的Auth机制常用的主要有两种：
 如果为某个系统从零开发一套HTTP Client，那么在每个request请求中添加auth信息就非常容易。因为，request请求是我们自己构建出来，如何发送
 request请求也是完全由我们控制。只需要几行代码就可以搞定，示例代码如下：
 
-```go
+```
 func Do(method string, url string, payload io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
@@ -51,7 +51,7 @@ func Do(method string, url string, payload io.Reader) (*http.Response, error) {
 如果某个系统已经有一套开源的HTTP Client可以拿来直接使用，是一件非常美好的事情，但是，并不一定完全满足我们的需求。例如，最近在使用Github的
 Go语言的Client [go-github](https://github.com/google/go-github)的时候，就遇到给request加auth的问题。
 
-```go
+```Golang
 // NewClient returns a new GitHub API client.  If a nil httpClient is
 // provided, http.DefaultClient will be used.  To use API methods which require
 // authentication, provide an http.Client that will perform the authentication
@@ -91,7 +91,7 @@ func NewClient(httpClient *http.Client) *Client {
 
 如果是采用Bearer Token的认证机制，可以使用官方提供的库[oauth2](https://github.com/golang/oauth2):
 
-```go
+```Golang
 // Use token to new GitHub client.
 tokenSource := oauth2.StaticTokenSource(
     &oauth2.Token{AccessToken: token},
@@ -101,7 +101,7 @@ client := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
 如果是采用Basic auth的认证机制，就需要用到一些技巧，充分利用HTTP Proxy的机制，就可以轻松为每个request加上Basic auth。
 
-```go
+```Golang
 	// Proxy specifies a function to return a proxy for a given
 	// Request. If the function returns a non-nil error, the
 	// request is aborted with the provided error.
@@ -112,7 +112,7 @@ client := oauth2.NewClient(oauth2.NoContext, tokenSource)
 Golang官方包`net/http`中已经对Proxy进行了详细的说明：该函数会为request返回一个proxy，如果返回非nil的error，request将被终止；如果返回
 非nil的URL，proxy将不会生效。因此，可以充分利用这个特性，给每个request加上Basic auth，而又丝毫不影响request的行为。示例代码如下：
 
-```go
+```Golang
 client := &http.Client{
     Transport: &http.Transport{
         Proxy: func(req *http.Request) (*url.URL, error) {

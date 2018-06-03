@@ -119,7 +119,7 @@ cmd/
 ![cmd](/img/in-post/k8s/workflow-of-k8s-cmd-template.png)
 
 [cmd/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/kubelet.go)
-```go
+```Golang
 import (
 	"fmt"
 	"os"
@@ -151,7 +151,7 @@ func main() {
 ```
 
 [cmd/kubelet/app/options/options.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/app/options/options.go)
-```go
+```Golang
 // NewKubeletServer will create a new KubeletServer with default values.
 func NewKubeletServer() *KubeletServer {
 	versioned := &v1alpha1.KubeletConfiguration{}
@@ -178,7 +178,7 @@ func (s *KubeletServer) AddFlags(fs *pflag.FlagSet) {
 ```
 
 [cmd/kubelet/app/server.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/cmd/kubelet/app/server.go)
-```go
+```Golang
 
 func Run(s *options.KubeletServer, kubeDeps *kubelet.KubeletDeps) error {
 	if err := run(s, kubeDeps); err != nil {
@@ -199,7 +199,7 @@ func run(s *options.KubeletServer, kubeDeps *kubelet.KubeletDeps) error {
 ## Flag Initialization
 
 [staging/src/k8s.io/apiserver/pkg/util/flag/flags.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/staging/src/k8s.io/apiserver/pkg/util/flag/flags.go#L46-L51)
-```go
+```Golang
 // InitFlags normalizes and parses the command line flags
 func InitFlags() {
 	pflag.CommandLine.SetNormalizeFunc(WordSepNormalizeFunc)
@@ -214,7 +214,7 @@ InitFlags()首先注册一个normalize的function，在`--help`输出参数提�
 ## Log Initialization
 
 [staging/src/k8s.io/apiserver/pkg/util/logs/logs.go](https://github.com/kubernetes/kubernetes/blob/v1.6.6/staging/src/k8s.io/apiserver/pkg/util/logs/logs.go#L45-L56)
-```go
+```Golang
 // InitLogs initializes logs the way we want for kubernetes.
 func InitLogs() {
 	log.SetOutput(GlogWriter{})
