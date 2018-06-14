@@ -26,23 +26,6 @@ MongoDB Cluster 中的各 member 间需要通过 keyfile 进行内部的 authent
 ```
 # cd data
 # openssl rand -base64 741 > mongodb-keyfile
-# cat mongodb-keyfile
-QS92k42rOk+AfNQXqJtsbXdYo9XRooGSP8qK97oJb2PUcpVyuTBOQfRrs94GkJ25
-OXq066JK1Klni42FC+t0zWoYM/EheN+Ngw8HB5S2t4EiulF7tn5ZfNq43sYvKlTR
-bhd4PCJBgfsbmFivHteH8Jb9dQVug2DQgOJyVIqeXiWfmF1Gy8Z0LZnlRm3oDLgG
-boVKuIz+qcSmuP8ZmDtN+B6JFkFlKP9rEU8uBuhsOhWC9QvEjLFzRhqXYaT70Hne
-9a8VrRGBxvo0oms50p3RrcJw9YKTM1sqYMK5mIOqKspy7iVdUs+ImRnq92EYj81G
-sZZWX7tFWOOb6GzNd9ckcm8vbTQqO9ANyqmWwXudgWXoKIwQIWHI6MRNynuDSpwL
-qYRkzxQE9oU4WL7ZJNaOTom3LLgpVVDZovzh20uu9XsQdRNxRYhzpCBx93agg9pU
-JLOCugV5Us46SNWYlJngKFCFvXRmBjVQQQeeERhBUQS5LNnUC9HOPSgfWdCImZ1N
-9UCX9J1DYf2bM82rAnnzH/xoKkwSAnGI2kf1A0HS8x2cYhwFJGhzSUK41Fqs8WXh
-RqEcErLqBQGJmT9s8ByNvd5R3jvLO+7O7h5VJdOrWprFpi+Zrr9/2wkzsI7WnaK1
-gOr/xqKCI7UBP4ij/c4il9ctM7fzUv2Jb1PXe3qMKEyzDsKmM0atS5kY2MOnuqR9
-X0Ob+jRxO9UYbfoCeiZVDZOjqOFH8VLvGV1mDG8Coy//qhdpdrXyslRVBFIIuvBx
-JYotPVAv+7Bm+FTc3H1xF9QostTHf9ylz9uclGlDJwBxSFIcj6JDVFdpC7f96JYZ
-+bVDoVjaX/xZv00ZuzEQZhOX3mb72bi6MWv2vqE6QtZaVO9QDcD+YWMkeKTK/x7o
-aqFAgjGuYJogrocQoRHzjQNTFYZq4Kuz3ewIZiZYBEyZdgrtDNjuJKNNj0T0/cGB
-H+Ook+YByLR3Oul3YhbG3CkqXEBQ
 ```
 
 ## Setup Cluster
@@ -144,6 +127,16 @@ f91aa2737b48        mongo:3.6.4   "docker-entrypoint.s…"   2 hours ago        
 78b454088500        mongo:3.6.4   "docker-entrypoint.s…"   2 hours ago         Up About an hour    0.0.0.0:30002->27017/tcp   mongodbcluster_mongo3_1
 ```
 
+进入容器中，执行如下命令，组件集群：
+
+```
+# docker-compose exec mongo1 mongo
+# rs.initiate()
+# rs.add('mongo2:30001')
+# rs.add('mongo3:30002')
+# rs.status()
+```
+
 # MongoDB Cluster by Kubernetes
 
 在 Kubernetes 中部署 MongoDB Cluster，主要是借助开源的工具 [mongo-k8s-sidecar](https://github.com/cvallance/mongo-k8s-sidecar)，后面简称为 Sidecar。
@@ -233,7 +226,6 @@ var workloop = function workloop() {
 
 
 ## Setup Cluster
-
 
 mongodb-statefulset.yaml
 
@@ -471,9 +463,13 @@ metadata:
   uid: d13a6454-5e72-11e8-94c2-52540017abeb
 ```
 
+备注：因为将 secret key mount 到 mongodb pod中，存在 permission 问题。 所以，自己构建 mongodb 的镜像，将 mongodb-keyfile 加入到镜像中。
+
 # Reference
 
 - [MongoDB Replica Set](https://docs.mongodb.com/manual/replication/)
 - [Enforce Keyfile Access Control in a Replica Set](https://docs.mongodb.com/v3.2/tutorial/enforce-keyfile-access-control-in-existing-replica-set/)
 - [Docker Hub MongoDB](https://hub.docker.com/_/mongo/)
 - [MongoDB statefulset for kubernetes with authentication and replication](https://gist.github.com/thilinapiy/0c5abc2c0c28efe1bbe2165b0d8dc115)
+- [Running MongoDB on Kubernetes with StatefulSets](https://kubernetes.io/blog/2017/01/running-mongodb-on-kubernetes-with-statefulsets/)
+- [Deploying a MongoDB Replica Set as a GKE Kubernetes StatefulSet](http://pauldone.blogspot.com/2017/06/deploying-mongodb-on-kubernetes-gke25.html)

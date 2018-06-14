@@ -141,8 +141,8 @@ data:
     var users = ["dev", "test", "product"];
     var pwd = "123456";
     var mgo = new Mongo('127.0.0.1:27017');
-    var admindb = mgo.getDB("admin")
-    admindb.auth("admin", pwd)
+    var admindb = mgo.getDB("admin");
+    admindb.auth("admin", pwd);
 
     for (i=0; i < users.length; i++) {
         user = users[i];
