@@ -154,6 +154,8 @@ If the dependency has been imported in your code, just need to run `dep ensure`.
 $ dep ensure
 ```
 
+> In order to forcibly update a dependency, use `dep ensure -v -update {package_name}`.
+
 ### Remove a dependency
 
 ```sh
