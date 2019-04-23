@@ -37,7 +37,7 @@ Dragonfly 是阿里巴巴开源的基于 P2P 的镜像和文件分发系统。
 
 ### Architecture
 
-![dragonfly](../img/in-post/dragonfly/dragonfly-arch.png)
+![dragonfly](/img/in-post/dragonfly/dragonfly-arch.png)
 
 Dragonfly 主要包含两个组件：
 
@@ -148,4 +148,4 @@ $ docker pull 127.0.0.1:65001/release/addon-manager-master:v0.0.1
 
 - [阿里Dragonfly体验之私有registry下载(基于0.3.0)](https://d7y.io/zh-cn/blog/d7y-private-registry.html)
 - [使用Dragonfly加速Docker镜像分发(基于0.3.0)](https://d7y.io/zh-cn/blog/d7y-dfdaemon.html)
-- [技术漫谈 | dragonfly 之 p2p 镜像分发](https://mp.weixin.qq.com/s/95mX8cDox5bmgQ2xGHLPqQ)
+- [技术漫谈：dragonfly 之 p2p 镜像分发](https://mp.weixin.qq.com/s/95mX8cDox5bmgQ2xGHLPqQ)
