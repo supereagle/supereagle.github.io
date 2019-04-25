@@ -77,9 +77,12 @@ Dragonfly 主要包含两个组件：
 $ docker run --name dragonfly-supernode --restart=always -d -p 8001:8001 -p 8002:8002 -v /data/dragonfly/supernode:/home/admin/supernode registry.cn-hangzhou.aliyuncs.com/dragonflyoss/supernode:0.3.0 -Dsupernode.advertiseIp=192.168.21.103
 ```
 
-SuperNode 参数说明：
+SuperNode 常用参数说明：
 
-- **Dsupernode.advertiseIp**: SuperNode 对外暴露的 IP。如果不配置的话，默认是 `127.0.0.1`，会导致 Clients 无法连接 SuperNode。
+- **supernode.advertiseIp**: SuperNode 对外暴露的 IP。如果不配置的话，默认是 `127.0.0.1`，会导致 Clients 无法连接 SuperNode。
+- **supernode.totalLimit**: SuperNode 的网络限速，默认单位 `MB/s`。
+
+> 更多参数，参考 [SuperNode configuration](https://d7y.io/en-us/docs/userguide/supernode_configuration.html)。
 
 2. Clients
 
@@ -123,10 +126,12 @@ $ systemctl restart docker
 $ docker run --name dragonfly-dfclient --restart=always -d -p 65001:65001 -v /root/.small-dragonfly:/root/.small-dragonfly -v /etc/dragonfly.conf:/etc/dragonfly.conf dragonflyoss/dfclient:v0.3.0 --registry=https://cargo.caicloud.io --ratelimit 500M
 ```
 
-Dfclients 参数说明：
+Dfclients 中的 Dfdaemon 常用参数说明：
 
 - **registry**: 需要加速的镜像源，可以是私有镜像仓库，也可以是公有镜像仓库。
-- **ratelimit**: 限速，默认是 20M。
+- **ratelimit**: 网络限速，默认是 20M。
+
+> 更多参数，参考 [Dfdaemon configuration](https://d7y.io/en-us/docs/cli_ref/dfdaemon.html)。
 
 ### Test
 
