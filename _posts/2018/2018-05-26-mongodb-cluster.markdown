@@ -7,8 +7,7 @@ author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
 catalog: true
 tags:
-    - MongoDB
-    - Cluster
+    - DB
 ---
 
 

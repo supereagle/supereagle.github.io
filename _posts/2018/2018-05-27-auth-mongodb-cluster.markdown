@@ -7,8 +7,7 @@ author:     "Robin"
 header-img: "img/post-bg-2015.jpg"
 catalog: true
 tags:
-    - MongoDB
-    - Cluster
+    - DB
 ---
 
 搭建的 MongoDB cluster 的目的是为了保证高可靠和高可用，一个没有权限控制的 MongoDB cluster 是很难做到高可靠的。
