@@ -38,7 +38,8 @@ tags:
 - **Default**：使用由Kubelet决定的Default DNS。如果Kubelet使用`--cluster-dns=1.2.3.4`，则该Node上的所有Container的`/etc/resolv.conf`中都会添加`nameserver 1.2.3.4`。如果Kubelet没有使用`--cluster-dns`，则默认使用Node上的DNS解析。
 
 [pkg/api/types.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/api/types.go#L1487-L1499)
-```
+
+```Golang
 // DNSPolicy defines how a pod's DNS will be configured.
 type DNSPolicy string
 
@@ -57,7 +58,8 @@ const (
 为Pod获得DNS的具体实现：
 
 [pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1267-L1325)
-```
+
+```Golang
 // GetClusterDNS returns a list of the DNS servers and a list of the DNS search
 // domains of the cluster.
 func (kl *Kubelet) GetClusterDNS(pod *api.Pod) ([]string, []string, error) {
@@ -130,7 +132,8 @@ cache pod status，并同步pod status到apiserver。两种同步触发机制：
 - pod状态更新：container ready，或者terminated，或者直接SetPodStatus
 
 [pkg/kubelet/status/status_manager.go](https://github.com/kubernetes/kubernetes/tree/v1.5.3/pkg/kubelet/status/status_manager.go)
-```
+
+```Golang
 const syncPeriod = 10 * time.Second
 
 func (m *manager) Start() {
@@ -178,7 +181,8 @@ ImageGCPolicy支持三个参数：
 - **LowThresholdPercent**： 镜像磁盘使用率低于该值，不触发GC。即镜像磁盘GC后的最低使用率。
 
 [pkg/kubelet/images/image_gc_manager.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/images/image_gc_manager.go)
-```
+
+```Golang
 // A policy for garbage collecting images. Policy defines an allowed band in
 // which garbage collection will be run.
 type ImageGCPolicy struct {
@@ -205,7 +209,8 @@ ContainerGCPolicy支持三个参数：
 唯一的接口GarbageCollect实际上是调用containerRuntime(Docker，或者rkt)的GarbageCollect。
 
 [pkg/kubelet/container/container_gc.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/container/container_gc.go)
-```
+
+```Golang
 // Specified a policy for garbage collecting containers.
  
 type ContainerGCPolicy struct {
@@ -240,7 +245,8 @@ Docker的GarbageCollect将非running且超过MinAge的container分成两类：
 ImageGC和ContainerGC，都是由StartGarbageCollection()分别单独起一个goroutine，根据GCPeriod定时执行。StartGarbageCollection()与NewMainKubelet()一起，在kubelet/app/server.go的CreateAndInitKubelet()中调用。
 
 [cmd/kubelet/app/server.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/cmd/kubelet/app/server.go#L794)
-```
+
+```Golang
 func CreateAndInitKubelet(kubeCfg *componentconfig.KubeletConfiguration, kubeDeps *kubelet.KubeletDeps, standaloneMode bool) (k kubelet.KubeletBootstrap, err error) {
 	// TODO: block until all sources have delivered at least one update to the channel, or break the sync loop
 	// up into "per source" synchronizations
@@ -259,7 +265,8 @@ func CreateAndInitKubelet(kubeCfg *componentconfig.KubeletConfiguration, kubeDep
 ```
 
 [pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1124)
-```
+
+```Golang
 // Starts garbage collection threads.
 func (kl *Kubelet) StartGarbageCollection() {
 	loggedContainerGCFailure := false
@@ -323,7 +330,7 @@ cniNetwork主要有两个方法：
 
 cniNetworkPlugin有两个网络：
 - loNetwork：getLoNetwork()获取loopback，必须有，没有导致无法调用CNI network
-	```
+	```Golang
 	func getLoNetwork(binDir, vendorDirPrefix string) *cniNetwork {
 		loConfig, err := libcni.ConfFromBytes([]byte(`{
 	  "cniVersion": "0.1.0",
@@ -349,7 +356,7 @@ cniNetworkPlugin有两个网络：
 	```
 
 - defaultNetwork：从/etc/cni/net.d下面读取config，只会读取第一个正确的，因此不要有多个
-	```
+	```Golang
 	func getDefaultCNINetwork(pluginDir, binDir, vendorCNIDirPrefix string) (*cniNetwork, error) {
 		if pluginDir == "" {
 			pluginDir = DefaultNetDir
@@ -385,7 +392,8 @@ cniNetworkPlugin有两个网络：
 CNI接口是由[containernetworking](https://github.com/containernetworking/cni)定义的。定义的接口非常简单，只有四个方法：
 
 [containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L51)
-```
+
+```Golang
 type CNI interface {
 	AddNetworkList(net *NetworkConfigList, rt *RuntimeConf) (types.Result, error)
 	DelNetworkList(net *NetworkConfigList, rt *RuntimeConf) error
@@ -398,7 +406,8 @@ type CNI interface {
 K8s在管理Pod网络时，主要用到其中的两个接口：AddNetwork()和DelNetwork()。以AddNetwork()为例，来分析其具体实现：先从pluginPath获得plugin的binary，然后injectRuntimeConfig()将网络配置注入到net中，并作为最后plugin执行的stdin，然后还会将network的操作（ADD或者DEL）以及RuntimeConf，作为plugin执行时的环境变量。
 
 [containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L169)
-```
+
+```Golang
 // AddNetwork executes the plugin with the ADD command
 func (c *CNIConfig) AddNetwork(net *NetworkConfig, rt *RuntimeConf) (types.Result, error) {
 	pluginPath, err := invoke.FindInPath(net.Network.Type, c.Path)
@@ -430,4 +439,3 @@ Pod配置更新，支持五种kubetypes: ADD，UPDATE，REMOVE，RECONCILE，DEL
 
 ## Reference
 * [kubelet源码分析](https://jdostech.github.io/2016/09/07/kubelet/)
-* []()
