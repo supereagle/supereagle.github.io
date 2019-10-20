@@ -30,7 +30,7 @@ Glog主要有以下特点：
 
 **Example：**
 
-```Golang
+```golang
 package main
 
 import (
@@ -128,7 +128,7 @@ Glog的代码非常简单，总共代码行数1.4K左右，分两个文件：
 
 ### Log Levels Definition
 
-```Golang
+```golang
 // severity identifies the sort of log: info, warning etc. It also implements
 // the flag.Value interface. The -stderrthreshold flag is of type severity and
 // should be modified only through the flag.Value interface. The values match
@@ -160,7 +160,7 @@ var severityName = []string{
 
 Glog在初始化的时候，会定义一些命令行参数，同时启动flush守护进程。Flush守护进程会间隔30s周期性地flush缓冲区中的log。
 
-```Golang
+```golang
 func init() {
 	flag.BoolVar(&logging.toStderr, "logtostderr", false, "log to standard error instead of files")
 	flag.BoolVar(&logging.alsoToStderr, "alsologtostderr", false, "log to standard error as well as files")
@@ -201,7 +201,7 @@ func (l *loggingT) flushDaemon() {
 `InfoDepth()`提供的`depth`参数，用来指定log信息中source file number来自的堆栈的深度。当`depth`为0时，就等价于`Info()`。
 由于`depth`的设置很难有一个明确的参考标准，因此`InfoDepth()`不常用。
 
-```Golang
+```golang
 func (l *loggingT) println(s severity, args ...interface{}) {
 	buf, file, line := l.header(s, 0)
 	fmt.Fprintln(buf, args...)
@@ -264,7 +264,7 @@ func Infof(format string, args ...interface{}) {
 
 Glog还有另外一个很赞的功能就是，遇到Fatal log会在自动退出程序，并在退出前将所有goroutine的堆栈信息输出，方便排错。因此，在程序需要异常退出的时候，直接调用Fatal\[f\|ln\|Depth\]()，应该成为一种标准做法。
 
-```Golang
+```golang
 // output writes the data to the log files and releases the buffer.
 func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoToStderr bool) {
 	l.mu.Lock()
@@ -344,7 +344,7 @@ vLog是用户自定义的log级别，与glog自带的log级别完全独立，使
 不过只提供Info()，Infof()和Infoln()三个方法，因此只能对infoLog进行更细粒度的等级划分，可以认为是补充DEBUG等级。
 
 使用方法很简单，有如下两种等价形式。虽然第二种简短，不过第一种代价更低。
-```Golang
+```golang
 if glog.V(2) {
 	glog.Info("log this")
 }
@@ -353,7 +353,7 @@ glog.V(2).Info("log this")
 ```
 
 vLog的实现原理也很简单：
-```Golang
+```golang
 // Verbose is a boolean type that implements Infof (like Printf) etc.
 // See the documentation of V for more information.
 type Verbose bool

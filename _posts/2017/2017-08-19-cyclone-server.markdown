@@ -117,7 +117,7 @@ Cyclone-Worker主要功能：
 Server启动的入口是[cmd/server/server.go](https://github.com/caicloud/cyclone/blob/master/cmd/server/server.go)，启动时的主要工作却在[api/server/server.go](https://github.com/caicloud/cyclone/blob/master/api/server/server.go)中完成的。
 
 [api/server/server.go](https://github.com/caicloud/cyclone/blob/master/api/server/server.go)
-```Golang
+```golang
 ......
 // PrepareRun prepare for apiserver running
 func (s *APIServer) PrepareRun() (*PreparedAPIServer, error) {
@@ -197,7 +197,7 @@ Log server是整个server中比较重要的，也是相对比较复杂的组件�
 4. 如果数据读取出错，或者一定时间内没有读取到正确的数据，就关闭session。
 
 [websocket/server.go](https://github.com/caicloud/cyclone/blob/master/websocket/server.go)
-```Golang
+```golang
 //StartServer start the websocket server
 func StartServer() (err error) {
 	scServerConfig := GetConfig()
@@ -262,7 +262,7 @@ func webMessageHandle(wsConn *websocket.Conn) {
 > 所有log最终都是落到MongoDB中。引入Kafka的目的，仅仅是为了中间临时存一下log，主要满足2方面的需求：1. Web client watch log的时候，能够从Kafka实时地pull log；2. 所有阶段结束之后，一次性将log从Kafka中存储到MongoDB中。
 
 [websocket/application.go](https://github.com/caicloud/cyclone/blob/master/websocket/application.go):
-```Golang
+```golang
 //AnalysisMessage analysis message receive from the web client.
 func AnalysisMessage(dp *DataPacket) bool {
 	sReceiveFrom := dp.GetReceiveFrom()
@@ -350,7 +350,7 @@ func workerPushLogHandler(sReceiveFrom string, jsonPacket []byte) {
 API-server收到一些任务请求之后，首先写入ETCD中，然后由event manager watch ETCD中的`/events/unfinished/`，最后对这些event进行处理。引入ETCD的主要目的是防止任务太多或者任务执行时间过长，系统负载过高导致一些任务丢失的情况。其实可以简单地认为是一个任务队列，起到提高系统稳定性和可靠性的作用。
 
 [event/manager.go](https://github.com/caicloud/cyclone/blob/master/event/manager.go)
-```Golang
+```golang
 // Init init event manager
 // Step1: init event operation map
 // Step2: new a etcd client

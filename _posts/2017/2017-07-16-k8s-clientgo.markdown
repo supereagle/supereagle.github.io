@@ -31,7 +31,7 @@ Kubernetes官方从2016年8月份开始，将Kubernetes资源操作相关的核�
 Kubernetes clientset就是这些组的client的集合，集合中的每个client只能操作相应的group中的resource，其他group中的resource是无法进行操作的。
 
 [kubernetes/clientset.go](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/clientset.go#L46-L122)
-```Golang
+```golang
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AdmissionregistrationV1alpha1() admissionregistrationv1alpha1.AdmissionregistrationV1alpha1Interface
@@ -125,7 +125,7 @@ type Clientset struct {
 ![clientset](/img/in-post/k8s-clientgo/k8s-clientset-deployment.png)
 
 [New AppsV1beta1Client](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/clientset.go#L158-L164)
-```Golang
+```golang
 // AppsV1beta1 retrieves the AppsV1beta1Client
 func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
 	if c == nil {
@@ -136,7 +136,7 @@ func (c *Clientset) AppsV1beta1() appsv1beta1.AppsV1beta1Interface {
 ```
 
 [Create Deployment Client](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/apps_client.go#L26-L45)
-```Golang
+```golang
 type AppsV1beta1Interface interface {
 	RESTClient() rest.Interface
 	ControllerRevisionsGetter
@@ -159,7 +159,7 @@ func (c *AppsV1beta1Client) Deployments(namespace string) DeploymentInterface {
 }
 ```
 [kubernetes/typed/apps/v1beta1/deployment.go](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/deployment.go#L28-L60)
-```Golang
+```golang
 // DeploymentsGetter has a method to return a DeploymentInterface.
 // A group's client should implement this interface.
 type DeploymentsGetter interface {
@@ -196,7 +196,7 @@ func newDeployments(c *AppsV1beta1Client, namespace string) *deployments {
 ```
 
 [Operate Deployments](https://github.com/kubernetes/client-go/blob/release-4.0/kubernetes/typed/apps/v1beta1/deployment.go#L62-L172)
-```Golang
+```golang
 // Create takes the representation of a deployment and creates it.  Returns the server's representation of the deployment, and an error, if there is any.
 func (c *deployments) Create(deployment *v1beta1.Deployment) (result *v1beta1.Deployment, err error) {
 	result = &v1beta1.Deployment{}

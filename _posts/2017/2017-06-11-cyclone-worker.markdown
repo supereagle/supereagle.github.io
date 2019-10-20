@@ -70,7 +70,7 @@ Cyclone-Worker启动后会立即根据Event Id，通过`getEvent()`向Cyclone-Se
 4. 记录stepLog的结束。
 
 [worker/ci/runner/runner.go](https://github.com/caicloud/cyclone/blob/v0.1/worker/ci/runner/runner.go#L69-L191)
-```Golang
+```golang
 // RunNode walks through the tree, run the build job.
 func (b *Build) RunNode(flags parser.NodeType) error {
 	b.flags = flags
@@ -147,7 +147,7 @@ func (b *Build) walk(node parser.Node) (err error) {
 Docker Client的`start()`只会create容器，不会stop和remove容器。它首先判断image是否存在，不存在先pull image，然后根据容器参数创建容器。
 
 [worker/ci/runner/docker.go](https://github.com/caicloud/cyclone/blob/v0.1/worker/ci/runner/docker.go#L236-L270)
-```Golang
+```golang
 // start a container with the given CreateContainerOptions.
 func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.Container, error) {
 	log.InfoWithFields("About to inspect the image.", log.Fields{"image": cco.Config.Image})
@@ -188,7 +188,7 @@ func start(b *Build, cco *docker_client.CreateContainerOptions) (*docker_client.
 Docker Client的`run()`首先调用`start()`，然后单独起goroutine收集执行日志，执行成功后copy出outputs。无论执行是否成功，构建容器最终都会被stop并remove。
 
 [worker/ci/runner/docker.go](https://github.com/caicloud/cyclone/blob/v0.1/worker/ci/runner/docker.go#L272-L362)
-```Golang
+```golang
 // run a container with the given CreateContainerOptions, currently it
 // involves: start the container, wait it to stop and record the log
 // into output.

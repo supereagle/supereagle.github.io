@@ -21,7 +21,7 @@ Flag原生支持8种命令行参数类型：bool、int、int64、uint、uint64�
 这些类型都需要实现`Value`接口：
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L233-L246)
-```Golang
+```golang
 // Value is the interface to the dynamic value stored in a flag.
 // (The default value is represented as a string.)
 //
@@ -41,7 +41,7 @@ type Value interface {
 下面以int和int64类型为例，进行对比分析如何支持这两种类型的参数。首先要为基本类型自定义一个新的类型，新类型必须实现`Value`接口：`Set(string) error`方法能够将string类型的value解析出来，并赋值给该类型的变量；`String() string`方法能够将该类型变量的值，转化为string。
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L233-L246)
-```Golang
+```golang
 // -- int Value
 type intValue int
 
@@ -82,7 +82,7 @@ func (i *int64Value) String() string { return strconv.FormatInt(int64(*i), 10) }
 添加自定义的命令行参数类型也非常简单，只需要采用类似的方法实现`Value`接口。可以参考官方提供的example：
 
 [golang/src/flag/example_test.go](https://github.com/golang/go/blob/master/src/flag/example_test.go#L33-L74)
-```Golang
+```golang
 // Example 3: A user-defined flag type, a slice of durations.
 type interval []time.Duration
 
@@ -132,7 +132,7 @@ func init() {
 有两重要的数据结构来表示flag：Flag是描述一个flag的数据结构，包括该flag的name、usage、value以及default value信息；FlagSet是描述所有Flag的集合，同时提供一系列的方法对集合中各种类型的所有Flag进行解析。
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L267-L290)
-```Golang
+```golang
 // A FlagSet represents a set of defined flags. The zero value of a FlagSet
 // has no name and has ContinueOnError error handling.
 type FlagSet struct {
@@ -166,7 +166,7 @@ type Flag struct {
 CommandLine是一个FlagSet类型的全局变量，用来存储所有定义过的flag。FlagSet的name就是命令行的第一个参数，即可执行程序的名字。
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L949-L975)
-```Golang
+```golang
 // CommandLine is the default set of command-line flags, parsed from os.Args.
 // The top-level functions such as BoolVar, Arg, and so on are wrappers for the
 // methods of CommandLine.
@@ -199,7 +199,7 @@ func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
 在解析和使用命令行参数前，必须定义flag。所有命令行参数类型提供的定义flag接口非常类似，下面以string类型的命令行参数为例进行说明。
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L693-L717)
-```Golang
+```golang
 // StringVar defines a string flag with specified name, default value, and usage string.
 // The argument p points to a string variable in which to store the value of the flag.
 func (f *FlagSet) StringVar(p *string, name string, value string, usage string) {
@@ -236,7 +236,7 @@ func String(name string, value string, usage string) *string {
 `FlagSet.parseOne()`首先判断剩余args的数量，flag前面是'-'或者'--'，flag后面是否有'='，flag是否被注册过，以及flag的值是否为bool类型等各种情况，最后获得flag的value，然后通过该flag提供的Set()方法，将value设置到flag中。
 
 [golang/src/flag/flag.go](https://github.com/golang/go/blob/release-branch.go1.8/src/flag/flag.go#L830-L947)
-```Golang
+```golang
 // parseOne parses one flag. It reports whether a flag was seen.
 func (f *FlagSet) parseOne() (bool, error) {
 	if len(f.args) == 0 {
@@ -370,7 +370,7 @@ flag虽然是Golang官方的命令行参数解析库，但是pflag却得到更�
 flag虽然不是原生支持shorthand，但是可以通过两个flag共享同一变量来间接支持，可以参考官方提供的Example：
 
 [golang/src/flag/example_test.go](https://github.com/golang/go/blob/master/src/flag/example_test.go#L19-L31)
-```Golang
+```golang
 // Example 2: Two flags sharing a variable, so we can have a shorthand.
 // The order of initialization is undefined, so make sure both use the
 // same default value. They must be set up with an init function.
@@ -388,7 +388,7 @@ func init() {
 
 pflag原生支持shorthand，在定义flag的时候为其指定shorthand，实现起来更加方便。flag虽然能够通过间接方式实现shorthand，但是flag的数量要翻倍，同时不能避免这两个flag被同时使用的错误用法。
 上面flag的shorthand example的pflag版如下：
-```Golang
+```golang
 // Example for shorthand in pflag.
 import flag "github.com/spf13/pflag"
 

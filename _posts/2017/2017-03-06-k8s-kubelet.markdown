@@ -39,7 +39,7 @@ tags:
 
 [pkg/api/types.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/api/types.go#L1487-L1499)
 
-```Golang
+```golang
 // DNSPolicy defines how a pod's DNS will be configured.
 type DNSPolicy string
 
@@ -59,7 +59,7 @@ const (
 
 [pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1267-L1325)
 
-```Golang
+```golang
 // GetClusterDNS returns a list of the DNS servers and a list of the DNS search
 // domains of the cluster.
 func (kl *Kubelet) GetClusterDNS(pod *api.Pod) ([]string, []string, error) {
@@ -133,7 +133,7 @@ cache pod status，并同步pod status到apiserver。两种同步触发机制：
 
 [pkg/kubelet/status/status_manager.go](https://github.com/kubernetes/kubernetes/tree/v1.5.3/pkg/kubelet/status/status_manager.go)
 
-```Golang
+```golang
 const syncPeriod = 10 * time.Second
 
 func (m *manager) Start() {
@@ -182,7 +182,7 @@ ImageGCPolicy支持三个参数：
 
 [pkg/kubelet/images/image_gc_manager.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/images/image_gc_manager.go)
 
-```Golang
+```golang
 // A policy for garbage collecting images. Policy defines an allowed band in
 // which garbage collection will be run.
 type ImageGCPolicy struct {
@@ -210,7 +210,7 @@ ContainerGCPolicy支持三个参数：
 
 [pkg/kubelet/container/container_gc.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/container/container_gc.go)
 
-```Golang
+```golang
 // Specified a policy for garbage collecting containers.
  
 type ContainerGCPolicy struct {
@@ -246,7 +246,7 @@ ImageGC和ContainerGC，都是由StartGarbageCollection()分别单独起一个go
 
 [cmd/kubelet/app/server.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/cmd/kubelet/app/server.go#L794)
 
-```Golang
+```golang
 func CreateAndInitKubelet(kubeCfg *componentconfig.KubeletConfiguration, kubeDeps *kubelet.KubeletDeps, standaloneMode bool) (k kubelet.KubeletBootstrap, err error) {
 	// TODO: block until all sources have delivered at least one update to the channel, or break the sync loop
 	// up into "per source" synchronizations
@@ -266,7 +266,7 @@ func CreateAndInitKubelet(kubeCfg *componentconfig.KubeletConfiguration, kubeDep
 
 [pkg/kubelet/kubelet.go](https://github.com/kubernetes/kubernetes/blob/v1.5.3/pkg/kubelet/kubelet.go#L1124)
 
-```Golang
+```golang
 // Starts garbage collection threads.
 func (kl *Kubelet) StartGarbageCollection() {
 	loggedContainerGCFailure := false
@@ -330,7 +330,7 @@ cniNetwork主要有两个方法：
 
 cniNetworkPlugin有两个网络：
 - loNetwork：getLoNetwork()获取loopback，必须有，没有导致无法调用CNI network
-	```Golang
+	```golang
 	func getLoNetwork(binDir, vendorDirPrefix string) *cniNetwork {
 		loConfig, err := libcni.ConfFromBytes([]byte(`{
 	  "cniVersion": "0.1.0",
@@ -356,7 +356,7 @@ cniNetworkPlugin有两个网络：
 	```
 
 - defaultNetwork：从/etc/cni/net.d下面读取config，只会读取第一个正确的，因此不要有多个
-	```Golang
+	```golang
 	func getDefaultCNINetwork(pluginDir, binDir, vendorCNIDirPrefix string) (*cniNetwork, error) {
 		if pluginDir == "" {
 			pluginDir = DefaultNetDir
@@ -393,7 +393,7 @@ CNI接口是由[containernetworking](https://github.com/containernetworking/cni)
 
 [containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L51)
 
-```Golang
+```golang
 type CNI interface {
 	AddNetworkList(net *NetworkConfigList, rt *RuntimeConf) (types.Result, error)
 	DelNetworkList(net *NetworkConfigList, rt *RuntimeConf) error
@@ -407,7 +407,7 @@ K8s在管理Pod网络时，主要用到其中的两个接口：AddNetwork()和De
 
 [containernetworking/cni/libcni/api.go](https://github.com/containernetworking/cni/blob/master/libcni/api.go#L169)
 
-```Golang
+```golang
 // AddNetwork executes the plugin with the ADD command
 func (c *CNIConfig) AddNetwork(net *NetworkConfig, rt *RuntimeConf) (types.Result, error) {
 	pluginPath, err := invoke.FindInPath(net.Network.Type, c.Path)
