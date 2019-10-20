@@ -69,7 +69,7 @@ func main() {
 **Usage**
 * 参数列表
 
-```
+```shell
 $ ./glog.exe -h
 Usage of E:\gocode\src\test\glog\glog.exe:
   -alsologtostderr
@@ -90,7 +90,7 @@ Usage of E:\gocode\src\test\glog\glog.exe:
 
 * Output
 
-```
+```shell
 $ ./glog.exe
 Temp folder for log files: C:\Users\robin\AppData\Local\Temp
 E0608 13:09:38.304553    2584 main.go:28] Error

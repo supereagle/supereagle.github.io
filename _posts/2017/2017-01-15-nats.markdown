@@ -131,8 +131,8 @@ NATS protocol是基于文本的，Client通过普通的TCP/IP套接字与服务�
 
 Docker Hub有很多NATS的镜像，包括一些官方提供的。通过`docker search`命令查找：
 
-```
-# docker search nats
+```shell
+$ docker search nats
 INDEX       NAME                                             DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
 docker.io   docker.io/nats                                   NATS is an open-source, high-performance, ...   96        [OK]       
 docker.io   docker.io/nats-streaming                         NATS Streaming is an open-source, high-per...   12        [OK]     
@@ -152,8 +152,8 @@ docker.io   docker.io/nats-streaming                         NATS Streaming is a
 
 * 连接服务器
 
-```
-# telnet demo.nats.io 4222
+```shell
+$ telnet demo.nats.io 4222
 Trying 107.170.221.32...
 Connected to demo.nats.io.
 Escape character is '^]'.
@@ -166,7 +166,7 @@ INFO {"server_id":"O4PDgd2slz5h90ZZbGoCCA","version":"0.9.4","go":"go1.6.3","hos
 
 T1：
 
-```
+```shell
 SUB foo 1
 +OK
 MSG foo 1 5
@@ -177,7 +177,7 @@ nats
 
 T2：
 
-```
+```shell
 PUB foo 5
 hello
 +OK
@@ -192,7 +192,7 @@ nats
 
 T1: 在组g1中，与T2只有一个能收到消息。
 
-```
+```shell
 sub foo g1 1
 +OK
 MSG foo 1 5
@@ -201,7 +201,7 @@ nats1
 
 T2: 在组g1中，与T1只有一个能收到消息。
 
-```
+```shell
 sub foo g1 2
 +OK
 MSG foo 2 5
@@ -210,7 +210,7 @@ hello
 
 T3: 不在组g1中，能收到所有消息。
 
-```
+```shell
 sub foo 3
 +OK
 MSG foo 3 5
@@ -221,7 +221,7 @@ nats1
 
 T4:
 
-```
+```shell
 pub foo 5
 hello
 +OK
@@ -236,7 +236,7 @@ nats1
 
 T1: 只能订阅foo的消息。
 
-```
+```shell
 sub foo 1
 +OK
 MSG foo 1 4
@@ -245,7 +245,7 @@ msg1
 
 T2: 只能订阅foo开头两个层级的主题，但是不能订阅foo。
 
-```
+```shell
 sub foo.* 2
 +OK
 MSG foo.bar 2 4
@@ -254,7 +254,7 @@ msg2
 
 T3: 只能订阅foo开头任意层级的主题，但是不能订阅foo。
 
-```
+```shell
 sub foo.> 3
 +OK
 MSG foo.bar 3 4
@@ -265,7 +265,7 @@ msg3
 
 T4:
 
-```
+```shell
 pub foo 4
 msg1
 +OK

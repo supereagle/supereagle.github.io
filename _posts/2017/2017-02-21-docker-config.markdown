@@ -62,8 +62,8 @@ CentOS官方提供docker RPM安装包，不过这个安装包是经过定制化�
 
 service文件中需要指定配置文件来导入环境变量，而且环境变量需要加到`ExecStart`才能生效。
 
-```
-# cat /usr/lib/systemd/system/docker.service
+```shell
+$ cat /usr/lib/systemd/system/docker.service
 [Unit]
 Description=Docker Application Container Engine
 Documentation=http://docs.docker.com
@@ -100,8 +100,8 @@ WantedBy=multi-user.target
 多个配置文件
 
 /etc/sysconfig/docker
-```
-# cat /etc/sysconfig/docker
+```shell
+$ cat /etc/sysconfig/docker
 # /etc/sysconfig/docker
 
 # Modify these options if you want to change the way the docker daemon runs
@@ -143,14 +143,14 @@ DOCKER_CERT_PATH=/etc/docker
 ```
 
 /etc/sysconfig/docker-storage
-```
-# cat /etc/sysconfig/docker-storage
+```shell
+$ cat /etc/sysconfig/docker-storage
 DOCKER_STORAGE_OPTIONS=--storage-driver devicemapper --storage-opt dm.fs=xfs --storage-opt dm.thinpooldev=/dev/mapper/docker--vg-docker--pool --storage-opt dm.use_deferred_removal=true --storage-opt dm.use_deferred_deletion=true
 ```
 
 /etc/sysconfig/docker-network
-```
-# cat /etc/sysconfig/docker-network 
+```shell
+$ cat /etc/sysconfig/docker-network
 # /etc/sysconfig/docker-network
 DOCKER_NETWORK_OPTIONS=
 ```
@@ -159,8 +159,8 @@ DOCKER_NETWORK_OPTIONS=
 
 service文件采用默认的即可，不需要额外配置。
 
-```
-# cat /usr/lib/systemd/system/docker.service
+```shell
+$ cat /usr/lib/systemd/system/docker.service
 [Unit]
 Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
@@ -193,8 +193,8 @@ WantedBy=multi-user.target
 
 `daemon.json`配置文件集中配置，结构清晰。
 
-```
-# cat /etc/docker/daemon.json
+```shell
+$ cat /etc/docker/daemon.json
 {
     "disable-legacy-registry": true,
     "max-concurrent-downloads": 10,

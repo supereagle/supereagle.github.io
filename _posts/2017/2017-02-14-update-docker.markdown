@@ -29,7 +29,7 @@ tags:
 
 1. Get docker-engine-1.13.0-1.el7.centos.x86_64.rpm and docker-engine-selinux-1.13.0-1.el7.centos.noarch.rpm from [Docker Stable Repository](https://yum.dockerproject.org/repo/main/centos/7/Packages/).
 2. Download [aliyun yum repo](http://mirrors.aliyun.com/repo/Centos-7.repo) and place it in folder /etc/yum.repo.d/
-3. Create Docker Daemon config file: /etc/docker/daemon.json  
+3. Create Docker Daemon config file: /etc/docker/daemon.json
 ```json
 {
     "disable-legacy-registry": true,
@@ -90,9 +90,9 @@ systemctl start docker
 
 Use aliyun yum repo.
 ```shell
-# mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
-# wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
-# yum makecache
+$ mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+$ wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+$ yum makecache
 ```
 
 * **Kubernetes-1.12 and kubernetes-node-1.12 are uninstalled while uninstalling old Docker 1.10.3**

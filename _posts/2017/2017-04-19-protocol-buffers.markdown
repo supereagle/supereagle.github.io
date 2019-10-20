@@ -40,8 +40,8 @@ Protobuf Runtime（Protobuf Compiler Plugin）支持不同编程。
 
 以Golang为例，其protobuf runtime安装非常简单：
 
-```
-go get -u github.com/golang/protobuf/protoc-gen-go
+```shell
+$ go get -u github.com/golang/protobuf/protoc-gen-go
 ```
 
 该命令执行两个操作：

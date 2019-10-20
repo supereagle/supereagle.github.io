@@ -60,7 +60,7 @@ A ------> B
 
 例如：
 
-```
+```toml
 [[constraint]]
   name = "github.com/test/B"
   # source 指定依赖的来源。

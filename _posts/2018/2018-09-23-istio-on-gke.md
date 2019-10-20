@@ -26,13 +26,13 @@ K8s 需要几分钟才能创建成功。通过 Cloud Shell 连接到 K8s 环境�
 
 1. 下载 Istio 安装包
 
-    ```
+    ```shell
     $ curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.0 sh -
     ```
 
 2. 将 Istio 加入 PATH 环境变量中
 
-    ```
+    ```shell
     $ export PATH="$PATH:/home/supereagleyue/istio-1.0.0/bin"
     ```
 
@@ -44,7 +44,7 @@ K8s 需要几分钟才能创建成功。通过 Cloud Shell 连接到 K8s 环境�
 
     Istio 安装包中，包含了安装 Istio 和示例应用 Bookinfo 需要的所有 YAML。
 
-    ```
+    ```shell
     # 进入 Istio 安装包目录
     $ cd istio-1.0.0
 
@@ -67,7 +67,7 @@ K8s 需要几分钟才能创建成功。通过 Cloud Shell 连接到 K8s 环境�
 
     解决办法是，为当前账号创建 `clusterrolebinding` :
 
-    ```
+    ```shell
     kubectl create clusterrolebinding cluster-admin-binding \
     --clusterrole=cluster-admin \
     --user=$(gcloud config get-value core/account)
@@ -84,14 +84,14 @@ K8s 需要几分钟才能创建成功。通过 Cloud Shell 连接到 K8s 环境�
     Istio 提供两种方式向[应用的 pod 中注入 sidecar](https://istio.io/zh/docs/setup/kubernetes/sidecar-injection/)：
     * 手动注入：通过修改 Pod template，Istio 的命令行工具 `istioctl` 提供手动注入的功能。
 
-    ```
-    kubectl apply -f <(istioctl kube-inject -f samples/bookinfo/platform/kube/bookinfo.yaml)
+    ```shell
+    $ kubectl apply -f <(istioctl kube-inject -f samples/bookinfo/platform/kube/bookinfo.yaml)
     ```
 
     * 自动注入：通过 K8s 提供的 mutating webhook admission controller 机制，要求 K8s 1.9+。只需要再 namespace 上设置标签 `istio-injection=enabled`.
 
-    ```
-    # 给 default namespace 设置标签
+    ```shell
+    # 给 default namespace 设置标签
     $ kubectl label namespace default istio-injection=enabled
     $ kubectl get namespace -L istio-injection
     NAME           STATUS    AGE       ISTIO-INJECTION
@@ -102,13 +102,13 @@ K8s 需要几分钟才能创建成功。通过 Cloud Shell 连接到 K8s 环境�
 
     # 部署 Bookinfo
     $ kubectl apply -f samples/bookinfo/kube/bookinfo.yaml
-```
+    ```
 
 2. 部署 BookInfo Gateway
 
     Gateway 类似于 K8s 的 Ingress，是外部流量进入集群的入口，Istio 通过它控制进入的 HTTP/TCP 流量。
 
-    ```
+    ```shell
     $ kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
     ```
 
@@ -197,7 +197,7 @@ spec:
   type: LoadBalancer
 ```
 
-```
+```shell
 # 通过 LB 暴露 Istio 组件服务
 $ kubectl create -f lb-svc.yaml
 
@@ -229,7 +229,7 @@ zipkin                     ClusterIP      10.23.247.57    <none>           9411/
 
 先给服务加一些负载，然后才能更好地看到 Istio 的效果。
 
-```
+```shell
 $ export GATEWAY_URL=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 $ echo $GATEWAY_URL
 
@@ -274,13 +274,13 @@ $ while true; do curl -s http://${GATEWAY_URL}/productpage > /dev/null; echo -n 
 
 清理 Bookinfo：
 
-```
+```shell
 $ samples/bookinfo/kube/cleanup.sh
 ```
 
 清理 Istio：
 
-```
+```shell
 $ kubectl delete -f install/kubernetes/istio-demo.yaml
 ```
 

@@ -108,22 +108,22 @@ Dep 存在的不足：
 
 MacOS 上通过 Homebrew 安装:
 
-```sh
+```shell
 $ brew install dep
 $ brew upgrade dep
 ```
 
 直接通过 `go get` 安装:
 
-```sh
-go get -u github.com/golang/dep/cmd/dep
+```shell
+$ go get -u github.com/golang/dep/cmd/dep
 ```
 
 ## Usage
 
 ### Start the Management
 
-```sh
+```shell
 $ dep init
 ```
 
@@ -139,7 +139,7 @@ $ dep init
 
 ### Add dependencies
 
-```sh
+```shell
 $ dep ensure
 ```
 
@@ -148,7 +148,7 @@ the latest version allowed by the manifest for the missing dependencies in `vend
 
 ### Add a dependency
 
-```sh
+```shell
 $ dep ensure -add github.com/golang/glog
 "github.com/golang/glog" is not imported by your project, and has been temporarily added to Gopkg.lock and vendor/.
 If you run "dep ensure" again before actually importing it, it will disappear from Gopkg.lock and vendor/.
@@ -162,7 +162,7 @@ If the dependency has been imported in your code, just need to run `dep ensure`.
 1. Manually edit `Gopkg.toml` like change the `version/branch/revision`
 2. Ensure the dependency
 
-```sh
+```shell
 $ dep ensure
 ```
 
@@ -170,7 +170,7 @@ $ dep ensure
 
 ### Remove a dependency
 
-```sh
+```shell
 $ dep ensure
 ```
 
@@ -178,7 +178,7 @@ $ dep ensure
 
 ### Check status of dependency
 
-```sh
+```shell
 $ dep status
 Lock inputs-digest mismatch due to the following packages missing from the lock:
 
@@ -203,8 +203,8 @@ Unable to update checked out version: : command failed: [git checkout 9f8ebd1714
 
 Solution:
 
-```
-# echo $GOPATH
+```shell
+$ echo $GOPATH
 /Users/robin/gocode
 # cd $GOPATH/pkg/dep
 # ls -l
@@ -239,7 +239,7 @@ github.com/caicloud/cyclone/vendor/github.com/zoumo/register
 当前 Docker 使用的版本是 `v1.13.1`， 根据其依赖管理工具记录的依赖版本信息 [vendor.conf](https://github.com/moby/moby/blob/v1.13.1/vendor.conf#L64)，
 获得 github.com/opencontainers/runtime-spec 的准确版本号应该是 `1c7c27d043c2a5e513a44084d2b10d77d1402b8c`。因此，在 `Gopkg.toml` 中添加如下内容：
 
-```
+```toml
 [[override]]
   name = "github.com/opencontainers/runtime-spec"
   revision = "1c7c27d043c2a5e513a44084d2b10d77d1402b8c"

@@ -23,16 +23,16 @@ ETCD集群除了要保证稳定性，同时还要保证其安全性。ETCD自身
 
 [cfssl](https://github.com/cloudflare/cfssl)是ETCD官方推荐的CA生产工具。
 
-```
-curl -s -L -o /usr/bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
-curl -s -L -o /usr/bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
-chmod +x /usr/bin/{cfssl,cfssljson}
+```shell
+$ curl -s -L -o /usr/bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+$ curl -s -L -o /usr/bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+$ chmod +x /usr/bin/{cfssl,cfssljson}
 ```
 
 ### Generate Self-signed CA
 
-```
-# cat ca-config.json 
+```shell
+$ cat ca-config.json 
 {
   "signing": {
     "default": {
@@ -50,7 +50,7 @@ chmod +x /usr/bin/{cfssl,cfssljson}
     }
   }
 }
-# cat ca-csr.json 
+$ cat ca-csr.json 
 {
   "CN": "Etcd",
   "key": {
@@ -68,7 +68,7 @@ chmod +x /usr/bin/{cfssl,cfssljson}
   ]
 }
  
-# cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+$ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 ```
 
 生成三个文件：
@@ -78,8 +78,8 @@ chmod +x /usr/bin/{cfssl,cfssljson}
 
 ### Generate Server Self-signed Key Pairs
 
-```
-# cat server-csr.json 
+```shell
+$ cat server-csr.json
 {
   "CN": "etcd-server",
   "hosts": [
@@ -103,7 +103,7 @@ chmod +x /usr/bin/{cfssl,cfssljson}
     }
   ]
 }
-# cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
+$ cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server-csr.json | cfssljson -bare server
 ```
 
 生成三个文件：server.pem, server-key.pem和server.csr。
@@ -112,8 +112,8 @@ chmod +x /usr/bin/{cfssl,cfssljson}
 
 ### Generate Client Self-signed Key Pairs
 
-```
-# cat client-csr.json 
+```shell
+$ cat client-csr.json
 {
   "CN": "etcd-client",
   "hosts": [
@@ -133,7 +133,7 @@ chmod +x /usr/bin/{cfssl,cfssljson}
     }
   ]
 }
-# cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
+$ cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | cfssljson -bare client
 ```
 
 生成三个文件：client.pem, client-key.pem和client.csr。
@@ -144,21 +144,21 @@ chmod +x /usr/bin/{cfssl,cfssljson}
 
 以在一台机器上搭建三个节点的集群为例，分别在1180，1280和1380分别起node1，node2和node3：
 
-```
-etcd --name=node3 --listen-client-urls=https://localhost:1379 --advertise-client-urls=https://localhost:1379 --listen-peer-urls=https://localhost:1380 --initial-advertise-peer-urls=https://localhost:1380 --initial-cluster=node1=https://localhost:1180,node2=https://localhost:1280,node3=https://localhost:1380 --initial-cluster-token=etcd-cluster-token --initial-cluster-state=new --cert-file=./server.pem --key-file=./server-key.pem --peer-cert-file=./server.pem --peer-key-file=./server-key.pem --trusted-ca-file=./ca.pem --peer-trusted-ca-file=./ca.pem --data-dir=./nodes/node3 --peer-client-cert-auth=true --client-cert-auth=true
+```shell
+$ etcd --name=node3 --listen-client-urls=https://localhost:1379 --advertise-client-urls=https://localhost:1379 --listen-peer-urls=https://localhost:1380 --initial-advertise-peer-urls=https://localhost:1380 --initial-cluster=node1=https://localhost:1180,node2=https://localhost:1280,node3=https://localhost:1380 --initial-cluster-token=etcd-cluster-token --initial-cluster-state=new --cert-file=./server.pem --key-file=./server-key.pem --peer-cert-file=./server.pem --peer-key-file=./server-key.pem --trusted-ca-file=./ca.pem --peer-trusted-ca-file=./ca.pem --data-dir=./nodes/node3 --peer-client-cert-auth=true --client-cert-auth=true
 ```
 
 额外需要的配置：--cert-file=./server.pem --key-file=./server-key.pem --peer-cert-file=./server.pem --peer-key-file=./server-key.pem --trusted-ca-file=./ca.pem --peer-trusted-ca-file=./ca.pem --peer-client-cert-auth=true --client-cert-auth=true
 
 ### Verification
 
-```
-# etcdctl --cert-file=client.pem  --key-file=client-key.pem --ca-file=ca.pem --endpoints=https://0.0.0.0:1179,https://0.0.0.0:1279,https://0.0.0.0:1379 cluster-health
+```shell
+$ etcdctl --cert-file=client.pem  --key-file=client-key.pem --ca-file=ca.pem --endpoints=https://0.0.0.0:1179,https://0.0.0.0:1279,https://0.0.0.0:1379 cluster-health
 member 5a68dbeefb870ed1 is healthy: got healthy result from https://localhost:1179
 member 772c76fe731a3914 is healthy: got healthy result from https://localhost:1379
 member aa3bff8d4d84db66 is healthy: got healthy result from https://localhost:1279
 cluster is healthy
-# etcdctl  --endpoints=https://0.0.0.0:1179,https://0.0.0.0:1279,https://0.0.0.0:1379 ls
+$ etcdctl  --endpoints=https://0.0.0.0:1179,https://0.0.0.0:1279,https://0.0.0.0:1379 ls
 Error:  x509: certificate signed by unknown authority
 ```
 

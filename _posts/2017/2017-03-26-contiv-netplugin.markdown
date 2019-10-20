@@ -20,7 +20,7 @@ Netplugin首先读取并解析命令行参数，然后根据参数配置，New�
 
 [contiv/netplugin/netplugin/netd.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/netplugin/netd.go#L111)
 
-```
+```golang
 func main() {
 	// 读取并解析命令行参数
 	...
@@ -77,7 +77,7 @@ NewAgent()主要根据Netplugin Config来进行Initialize各模块：
 
 [contiv/netplugin/netplugin/agent/agent.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/netplugin/agent/agent.go#L47)
 
-```
+```golang
 // NewAgent creates a new netplugin agent
 func NewAgent(pluginConfig *plugin.Config) *Agent {
 	opts := pluginConfig.Instance
@@ -138,7 +138,7 @@ PostInit()将该节点加入到Cluster Services中。Register三个services，ne
 
 [contiv/netplugin/netplugin/agent/agent.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/netplugin/agent/agent.go#L179)
 
-```
+```golang
 // PostInit post initialization
 func (ag *Agent) PostInit() error {
 	opts := ag.pluginConfig.Instance
@@ -162,7 +162,7 @@ Netplugin中最重要的两个driver，分别是StateDriver和NetworkDriver，�
 
 [contiv/netplugin/utils/driverfactory.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/utils/driverfactory.go#L11)
 
-```
+```golang
 // implement utilities for instantiating the supported core.Driver
 // (state, network and endpoint) instances
 
@@ -206,7 +206,7 @@ Netplugin中的StateDriver是单例模式，全局唯一的gStateDriver。
 
 [contiv/netplugin/utils/driverfactory.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/utils/driverfactory.go#L73)
 
-```
+```golang
 // NewStateDriver instantiates a 'named' state-driver with specified configuration
 func NewStateDriver(name string, instInfo *core.InstanceInfo) (core.StateDriver, error) {
 	if name == "" || instInfo == nil {
@@ -248,7 +248,7 @@ Netplugin中的NetworkDriver跟StateDriver不一样，不是单例模式。当ET
 
 [contiv/netplugin/utils/driverfactory.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/utils/driverfactory.go#L115)
 
-```
+```golang
 // NewNetworkDriver instantiates a 'named' network-driver with specified configuration
 func NewNetworkDriver(name string, instInfo *core.InstanceInfo) (core.NetworkDriver, error) {
 	if name == "" || instInfo == nil {
@@ -278,7 +278,7 @@ NewAgent()中会调用k8splugin.InitCNIServer(netPlugin)来启动CNIServer，监
 
 [contiv/netplugin/mgmtfn/k8splugin/cniserver.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/mgmtfn/k8splugin/cniserver.go#L198)
 
-```
+```golang
 // InitCNIServer initializes the k8s cni server
 func InitCNIServer(netplugin *plugin.NetPlugin) error {
 
@@ -334,7 +334,7 @@ deletePod()跟addPod()操作类似，只不过获得网络信息之后，执行�
 
 [contiv/netplugin/mgmtfn/k8splugin/driver.go](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/mgmtfn/k8splugin/driver.go#L376)
 
-```
+```golang
 // addPod is the handler for pod additions
 func addPod(r *http.Request) (interface{}, error) {
 
@@ -468,7 +468,7 @@ contivk8s通过unix sock(/run/contiv/contiv-cni.sock)，向localhost的netplugin
 
 [contiv/netplugin/mgmtfn/k8splugin/contivk8s](https://github.com/contiv/netplugin/blob/v1.0.0-alpha-01-28-2017.10-23-11.UTC/mgmtfn/k8splugin/contivk8s/k8s_cni.go#L150)
 
-```
+```golang
 func mainfunc() {
 	pInfo := cniapi.CNIPodAttr{}
 	cniCmd := os.Getenv("CNI_COMMAND")

@@ -40,11 +40,11 @@ tags:
 
 按照常规的Github开发流程，在本地clone的fork项目中直接`go build`，会存在如下问题：
 * 提示项目内部的package不存在
-```
-# pwd
+```shell
+$ pwd
 /Users/robin/gocode/src/github.com/supereagle/cyclone
-# cd cmd/server
-# go build .
+$ cd cmd/server
+$ go build .
 options.go:20:2: cannot find package "github.com/caicloud/cyclone/api/server" in any of:
 	/Users/robin/gocode/src/github.com/supereagle/cyclone/vendor/github.com/caicloud/cyclone/api/server (vendor tree)
 	/usr/local/Cellar/go/1.9.2/libexec/src/github.com/caicloud/cyclone/api/server (from $GOROOT)
@@ -71,10 +71,10 @@ Fork出来的项目在GOPATH中的路径发生了改变，但是代码中import�
 由于Golang包管理的这种限制，所以不要基于fork出来的项目修改，而是直接修改上游的项目，然后将修改push到自己fork出来的项目中，从而避免上面两个构建的问题。
 主要步骤：
 1. 将origin修改为supereagle/cyclone
-```
-# pwd
+```shell
+$ pwd
 /Users/robin/gocode/src/github.com/caicloud/cyclone
-# cat .git/config
+$ cat .git/config
 [core]
 	repositoryformatversion = 0
 	filemode = true
@@ -91,9 +91,9 @@ Fork出来的项目在GOPATH中的路径发生了改变，但是代码中import�
 ```
 
 2. 将caicloud/cyclone添加为upstream
-```
-# git remote add upstream https://github.com/caicloud/cyclone
-# cat .git/config
+```shell
+$ git remote add upstream https://github.com/caicloud/cyclone
+$ cat .git/config
 [core]
 	repositoryformatversion = 0
 	filemode = true
@@ -113,8 +113,8 @@ Fork出来的项目在GOPATH中的路径发生了改变，但是代码中import�
 ```
 
 3. Fetch upstream的所有branch和tag
-```
-# git fetch upstream
+```shell
+$ git fetch upstream
 remote: Counting objects: 167, done.
 remote: Total 167 (delta 104), reused 104 (delta 104), pack-reused 62
 Receiving objects: 100% (167/167), 40.36 KiB | 0 bytes/s, done.
@@ -133,8 +133,8 @@ From https://github.com/caicloud/cyclone
 ```
 
 4. 在`.git/config`中将master branch的source设置为upstream
-```
-# cat .git/config
+```shell
+$ cat .git/config
 [core]
 	repositoryformatversion = 0
 	filemode = true
@@ -154,8 +154,8 @@ From https://github.com/caicloud/cyclone
 ```
 
 5. 基于master branch创建开发branch，并开发好了之后push到自己项目中
-```
-# git push origin fix-err:fix-err
+```shell
+$ git push origin fix-err:fix-err
 ```
 
 ## Summary

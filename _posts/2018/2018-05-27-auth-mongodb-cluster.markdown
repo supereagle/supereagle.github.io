@@ -28,16 +28,15 @@ tags:
 
 1. 生成 keyfile
 
-```
-# openssl rand -base64 741 > mongodb-keyfile
+```shell
+$ openssl rand -base64 741 > mongodb-keyfile
 ```
 
 2. 定制化 MongoDB 镜像
 
 在官方的 MongoDB 镜像的基础上，增加 keyfile。Dockerfile 内容如下：
 
-```
-cat Dockerfile
+```dockerfile
 FROM mongo:3.6.4
 
 ADD mongodb-keyfile /data/config/mongodb-keyfile
@@ -48,7 +47,7 @@ RUN chown mongodb:mongodb /data/config/mongodb-keyfile
 
 mongo-statefulset.yaml：
 
-```
+```yaml
 ---
 apiVersion: v1
 kind: Service
@@ -168,17 +167,17 @@ data:
 
 查看集群资源：
 
-```
-# kubectl get statefulset
+```shell
+$ kubectl get statefulset
 NAME                     DESIRED   CURRENT   AGE
 mongo                    3         3         58s
-# kubectl get svc
+$ kubectl get svc
 NAME                                                           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
 mongo                                                          ClusterIP   None             <none>        27017/TCP        1m
-# kubectl get cm
+$ kubectl get cm
 NAME                 DATA      AGE
 mongo-init-js        1         1m
-# kubectl get po
+$ kubectl get po
 NAME                                                             READY     STATUS             RESTARTS   AGE
 mongo-0                                                          2/2       Running            0          2m
 mongo-1                                                          2/2       Running            0          2m
@@ -187,14 +186,14 @@ mongo-2                                                          2/2       Runni
 
 进入集群某实例：
 
-```
-# kubectl exec -it mongo-1 /bin/sh
-# mongo -u admin -p 123456 --authenticationDatabase admin
+```shell
+$ kubectl exec -it mongo-1 /bin/sh
+$ mongo -u admin -p 123456 --authenticationDatabase admin
 ```
 
 查看集群状态：
 
-```
+```shell
 rs0:SECONDARY> rs.status()
 {
 	"set" : "rs0",
@@ -300,7 +299,7 @@ rs0:SECONDARY> rs.status()
 
 查看集群用户信息：
 
-```
+```shell
 rs0:PRIMARY> use admin
 switched to db admin
 rs0:PRIMARY> db.system.users.find().pretty()

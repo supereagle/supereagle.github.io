@@ -139,7 +139,7 @@ Dfclients 中的 Dfdaemon 常用参数说明：
 
 ```shell
 $ docker pull nginx
-````
+```
 
 * Pull 私有仓库镜像
 

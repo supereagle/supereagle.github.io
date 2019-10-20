@@ -22,16 +22,16 @@ Sharding 主要是通过数据的分片，保证数据的可用性和高并发�
 
 MongoDB Cluster 中的各 member 间需要通过 keyfile 进行内部的 authentication。产生 keyfile 的步骤如下：
 
-```
-# cd data
-# openssl rand -base64 741 > mongodb-keyfile
+```shell
+$ cd data
+$ openssl rand -base64 741 > mongodb-keyfile
 ```
 
 ## Setup Cluster
 
 mongodb-cluster.yaml: 
 
-```
+```yaml
 version: '3.1'
 services:
   mongo1:
@@ -117,9 +117,9 @@ services:
 
 Start MongoDB Cluster:
 
-```
-# docker-compose up -d
-# docker ps
+```shell
+$ docker-compose up -d
+$ docker ps
 CONTAINER ID        IMAGE           COMMAND                  CREATED           STATUS              PORTS                      NAMES
 0c5ffd781dfc        mongo:3.6.4   "docker-entrypoint.s…"   2 hours ago         Up About an hour    0.0.0.0:30000->27017/tcp   mongodbcluster_mongo1_1
 f91aa2737b48        mongo:3.6.4   "docker-entrypoint.s…"   2 hours ago         Up About an hour    0.0.0.0:30001->27017/tcp   mongodbcluster_mongo2_1
@@ -128,12 +128,12 @@ f91aa2737b48        mongo:3.6.4   "docker-entrypoint.s…"   2 hours ago        
 
 进入容器中，执行如下命令，组件集群：
 
-```
-# docker-compose exec mongo1 mongo
-# rs.initiate()
-# rs.add('mongo2:30001')
-# rs.add('mongo3:30002')
-# rs.status()
+```shell
+$ docker-compose exec mongo1 mongo
+$ rs.initiate()
+$ rs.add('mongo2:30001')
+$ rs.add('mongo3:30002')
+$ rs.status()
 ```
 
 # MongoDB Cluster by Kubernetes
@@ -153,7 +153,7 @@ Sidecar 主要包含如下 4 个组件：
 
 worker.js 核心源码分析：
 
-```
+```js
 var workloop = function workloop() {
   if (!hostIp || !hostIpAndPort) {
     throw new Error('Must initialize with the host machine\'s addr');
@@ -228,7 +228,7 @@ var workloop = function workloop() {
 
 mongodb-statefulset.yaml
 
-```
+```yaml
 ---
 apiVersion: apps/v1
 kind: StatefulSet

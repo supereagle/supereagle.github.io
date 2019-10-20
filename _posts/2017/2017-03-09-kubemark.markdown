@@ -86,8 +86,8 @@ API调用延时统计数据表格示例：
 
 ### 安装依赖
 
-```
-yum install -y gcc.x86_64
+```shell
+$ yum install -y gcc.x86_64
 ```
 
 ### Go开发环境
@@ -96,9 +96,9 @@ yum install -y gcc.x86_64
 2. 解压到/usr/local/go目录下
 3. 设置GOROOT和GOPATH环境变量
 	/etc/profile中添加：
-	```
-	export GOPATH=/root/gocode
-	export PATH=$PATH:/opt/maven/latest/bin:$GOPATH/bin:/usr/local/go/bin
+	```shell
+	$ export GOPATH=/root/gocode
+	$ export PATH=$PATH:/opt/maven/latest/bin:$GOPATH/bin:/usr/local/go/bin
 	```
 	使变量生效：source /etc/profile
 
@@ -112,57 +112,57 @@ yum install -y gcc.x86_64
 
 1. Git clone K8s源码
 
-	```
-	git clone https://github.com/kubernetes/kubernetes.git
-	cd kubernetes
-	git checkout -b v1.5.0 v1.5.0 （checkout需要测试的K8s版本）
-	cd ..
-	mkdir $GOPATH/src/k8s.io
-	mv kubernetes $GOPATH/src/k8s.io/
-	cd $GOPATH/src/k8s.io/kubernetes
+	```shell
+	$ git clone https://github.com/kubernetes/kubernetes.git
+	$ cd kubernetes
+	$ git checkout -b v1.5.0 v1.5.0 （checkout需要测试的K8s版本）
+	$ cd ..
+	$ mkdir $GOPATH/src/k8s.io
+	$ mv kubernetes $GOPATH/src/k8s.io/
+	$ cd $GOPATH/src/k8s.io/kubernetes
 	```
 	**备注：后续的所有命令操作，都是在$GOPATH/src/k8s.io/kubernetes目录下。**
 
 2. 准备构建依赖
 
-	```
-	# cat vendor/k8s.io/client-go
+	```shell
+	$ cat vendor/k8s.io/client-go
 	../../staging/src/k8s.io/client-go
-	# cd vendor/k8s.io/
-	# ln -s -f ../../staging/src/k8s.io/client-go client-go
+	$ cd vendor/k8s.io/
+	$ ln -s -f ../../staging/src/k8s.io/client-go client-go
 	```
 
 3. 自动产生需要的代码bindata.go
 
-	```
-	# go get -u github.com/jteeuwen/go-bindata/...
-	# ./hack/generate-bindata.sh
+	```shell
+	$ go get -u github.com/jteeuwen/go-bindata/...
+	$ ./hack/generate-bindata.sh
 	```
 
 4. 构建测试文件
 
-	```
-	make WHAT='test/e2e/e2e.test'
-	make ginkgo
+	```shell
+	$ make WHAT='test/e2e/e2e.test'
+	$ make ginkgo
 	```
 
 5. 设置环境变量
 
-	```
-	export KUBECTL_PATH=/bin/kubectl
-	export KUBERNETES_PROVIDER=local
+	```shell
+	$ export KUBECTL_PATH=/bin/kubectl
+	$ export KUBERNETES_PROVIDER=local
 	```
 
 6. 创建kubeconfig
 
-	```
-	kubectl config view -o yaml >> /root/.kube/config
+	```shell
+	$ kubectl config view -o yaml >> /root/.kube/config
 	```
 
 7. 执行performance test
 
-	```
-	go run hack/e2e.go -v -test  --test_args="--host=http://127.0.0.1:8080 --ginkgo.focus=\[Feature:Performance\]" >> logs/log.txt （将log重定向到文件中，方便分析数据）
+	```shell
+	$ go run hack/e2e.go -v -test  --test_args="--host=http://127.0.0.1:8080 --ginkgo.focus=\[Feature:Performance\]" >> logs/log.txt （将log重定向到文件中，方便分析数据）
 	```
 
 非K8s master上运行Kubemark，除了--test_args中的–host需要配置为正确的apiserver，还要在跑Kubemark的机器上做如下配置（Kubemark需要通过kubectl读取kubeconfig来获得测试K8s cluster信息）：
@@ -170,8 +170,8 @@ yum install -y gcc.x86_64
 - 需要有kubectl binary，存放的位置与$KUBECTL_PATH保持一致
 - 配置kubeconfig file
 
-	```
-	# cat ~/.kube/config
+	```shell
+	$ cat ~/.kube/config
 	apiVersion: v1
 	clusters:
 	- cluster:
@@ -256,8 +256,8 @@ yum install -y gcc.x86_64
 
 4. 构建e2e.test时，cannot find package "k8s.io/client-go/kubernetes"
 
-	```
-	# make WHAT='test/e2e/e2e.test'
+	```shell
+	$ make WHAT='test/e2e/e2e.test'
 	test/e2e/disruption.go:25:2: cannot find package "k8s.io/client-go/kubernetes" in any of:
 	    /root/gocode/src/k8s.io/kubernetes/vendor/k8s.io/client-go/kubernetes (vendor tree)
 	    /usr/local/go/src/k8s.io/client-go/kubernetes (from $GOROOT)
@@ -266,11 +266,11 @@ yum install -y gcc.x86_64
 	
 	建立vendor/k8s.io/client-go的软连接：
 	
-	```
-	# cat vendor/k8s.io/client-go
+	```shell
+	$ cat vendor/k8s.io/client-go
 	../../staging/src/k8s.io/client-go
-	# cd vendor/k8s.io/
-	# ln -s ../../staging/src/k8s.io/client-go client-go
+	$ cd vendor/k8s.io/
+	$ ln -s ../../staging/src/k8s.io/client-go client-go
 	```
 
 5. 构建e2e.test时，exec: "gcc": executable file not found in $PATH
@@ -279,17 +279,17 @@ yum install -y gcc.x86_64
 
 6. 构建e2e.test时，缺少自动产生的代码
 
-	```
-	# k8s.io/kubernetes/test/e2e/framework
+	```shell
+	$ k8s.io/kubernetes/test/e2e/framework
 	test/e2e/framework/gobindata_util.go:30: undefined: generated.Asset
 	test/e2e/framework/gobindata_util.go:33: undefined: generated.AssetNames
 	```
 	
 	自动产生需要的代码：
 	
-	```
-	# go get -u github.com/jteeuwen/go-bindata/...
-	# ../../../hack/generate-bindata.sh
+	```shell
+	$ go get -u github.com/jteeuwen/go-bindata/...
+	$ ../../../hack/generate-bindata.sh
 	Generated bindata file : ../../../hack/../test/e2e/generated/bindata.go has 12697 ../../../hack/../test/e2e/generated/bindata.go lines of lovely automated artifacts
 	```
 
@@ -307,8 +307,8 @@ yum install -y gcc.x86_64
 	先从时速云Docker Registry下载到本地，然后重新打tag，并push到公司的Docker Registry上。所有K8s nodes从公司的Docker Registry上pull需要的image，然后重新tag为测试需要个gcr image。
 	可以不用注册和login时速云，直接pull镜像。从时速云下载镜像过程中，偶尔出现域名解析的问题：
 	
-	```
-	# docker pull index.tenxcloud.com/google_containers/mounttest:0.7 Trying to pull repository index.tenxcloud.com/google_containers/mounttest ... Get https://index.tenxcloud.com/v2/google_containers/mounttest/manifests/0.7: Get https://rv2-ext.tenxcloud.com:5001/auth?scope=repository%3Agoogle_containers%2Fmounttest%3Apull&service=index.tenxcloud.com: dial tcp: lookup rv2-ext.tenxcloud.com: no such host
+	```shell
+	$ docker pull index.tenxcloud.com/google_containers/mounttest:0.7 Trying to pull repository index.tenxcloud.com/google_containers/mounttest ... Get https://index.tenxcloud.com/v2/google_containers/mounttest/manifests/0.7: Get https://rv2-ext.tenxcloud.com:5001/auth?scope=repository%3Agoogle_containers%2Fmounttest%3Apull&service=index.tenxcloud.com: dial tcp: lookup rv2-ext.tenxcloud.com: no such host
 	```
 	
 	/etc/hosts中加入域名解析：119.254.210.246 rv2-ext.tenxcloud.com
@@ -395,8 +395,6 @@ yum install -y gcc.x86_64
 	```
 	
 	安装ntp并同步两台机器的时间。
-
-
 
 ## Reference
 

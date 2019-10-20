@@ -25,7 +25,7 @@ HTTP Request的Auth机制常用的主要有两种：
 如果为某个系统从零开发一套HTTP Client，那么在每个request请求中添加auth信息就非常容易。因为，request请求是我们自己构建出来，如何发送
 request请求也是完全由我们控制。只需要几行代码就可以搞定，示例代码如下：
 
-```
+```golang
 func Do(method string, url string, payload io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {

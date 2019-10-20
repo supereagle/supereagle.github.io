@@ -24,119 +24,137 @@ Kubernetes 各自组件都提供 Health check 的 API，同时 Apiserver 也提�
 
 * Apiserver
 
-```
-GET /healthz
+    Request:
 
-ok
-```
+    ```
+    GET /healthz
+    ```
+
+    Response：
+
+    ```
+    ok
+    ```
 
 * ETCD
 
-```
-GET /healthz/etcd
+    Request:
 
-ok
-```
+    ```
+    GET /healthz/etcd
+    ```
+
+    Response：
+
+    ```
+    ok
+    ```
 
 * All Components
 
-```
-GET /api/v1/componentstatuses
+    Request:
 
-{
-    "kind": "ComponentStatusList",
-    "apiVersion": "v1",
-    "metadata": {
-        "selfLink": "/api/v1/componentstatuses"
-    },
-    "items": [
-        {
-            "metadata": {
-                "name": "controller-manager",
-                "selfLink": "/api/v1/componentstatuses/controller-manager",
-                "creationTimestamp": null
-            },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "ok"
-                }
-            ]
+    ```
+    GET /api/v1/componentstatuses
+    ```
+
+    Response：
+
+    ```json
+    {
+        "kind": "ComponentStatusList",
+        "apiVersion": "v1",
+        "metadata": {
+            "selfLink": "/api/v1/componentstatuses"
         },
-        {
-            "metadata": {
-                "name": "scheduler",
-                "selfLink": "/api/v1/componentstatuses/scheduler",
-                "creationTimestamp": null
+        "items": [
+            {
+                "metadata": {
+                    "name": "controller-manager",
+                    "selfLink": "/api/v1/componentstatuses/controller-manager",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "ok"
+                    }
+                ]
             },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "ok"
-                }
-            ]
-        },
-        {
-            "metadata": {
-                "name": "etcd-2",
-                "selfLink": "/api/v1/componentstatuses/etcd-2",
-                "creationTimestamp": null
+            {
+                "metadata": {
+                    "name": "scheduler",
+                    "selfLink": "/api/v1/componentstatuses/scheduler",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "ok"
+                    }
+                ]
             },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "{\"health\": \"true\"}"
-                }
-            ]
-        },
-        {
-            "metadata": {
-                "name": "etcd-0",
-                "selfLink": "/api/v1/componentstatuses/etcd-0",
-                "creationTimestamp": null
+            {
+                "metadata": {
+                    "name": "etcd-2",
+                    "selfLink": "/api/v1/componentstatuses/etcd-2",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "{\"health\": \"true\"}"
+                    }
+                ]
             },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "{\"health\": \"true\"}"
-                }
-            ]
-        },
-        {
-            "metadata": {
-                "name": "etcd-1",
-                "selfLink": "/api/v1/componentstatuses/etcd-1",
-                "creationTimestamp": null
+            {
+                "metadata": {
+                    "name": "etcd-0",
+                    "selfLink": "/api/v1/componentstatuses/etcd-0",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "{\"health\": \"true\"}"
+                    }
+                ]
             },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "{\"health\": \"true\"}"
-                }
-            ]
-        },
-        {
-            "metadata": {
-                "name": "etcd-3",
-                "selfLink": "/api/v1/componentstatuses/etcd-3",
-                "creationTimestamp": null
+            {
+                "metadata": {
+                    "name": "etcd-1",
+                    "selfLink": "/api/v1/componentstatuses/etcd-1",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "{\"health\": \"true\"}"
+                    }
+                ]
             },
-            "conditions": [
-                {
-                    "type": "Healthy",
-                    "status": "True",
-                    "message": "{\"health\": \"true\"}"
-                }
-            ]
-        }
-    ]
-}
-```
+            {
+                "metadata": {
+                    "name": "etcd-3",
+                    "selfLink": "/api/v1/componentstatuses/etcd-3",
+                    "creationTimestamp": null
+                },
+                "conditions": [
+                    {
+                        "type": "Healthy",
+                        "status": "True",
+                        "message": "{\"health\": \"true\"}"
+                    }
+                ]
+            }
+        ]
+    }
+    ```
 
 `componentstatuses` API 只能提供对控制面组件（Controller manager，Scheduler，ETCD）的监控，对于节点上组件（Kubelet，Kube-proxy）无法进行监控。这种方案要求所有控制面组件跟 Apiserver 部署在同一台机器上，因为这个局限性，社区早在 2015 就有人提出[废弃这个 API 的提议](https://github.com/kubernetes/kubernetes/issues/18610)，但是这个提议到目前都还没有落实。
 

@@ -39,7 +39,7 @@ Cyclone-Worker主要功能：
 ### 源码目录结构
 
 ```shell
-# tree -d -I vendor
+$ tree -d -I vendor
 .
 ├── api
 │   ├── rest            # 注册REST API
