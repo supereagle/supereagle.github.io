@@ -104,11 +104,142 @@ $ yum install -y gcc.x86_64
 
 ### Test Images
 
-为了避免下载测试镜像，给Kubemark性能测试的结果带来误差，在运行Kubemark前，需要在所有K8s nodes上提前准备好这些镜像。Kubemark测试时使用的image都是GCR上面的，对于不能翻墙的Kubernetes Cluster，可以从[时速云Docker Registry](https://hub.tenxcloud.com/)下载相应的镜像到本地，然后重新标签为GCR的测试image。对于甚至不能连接外网的Kubernetes Cluster，可以通过一台可以连外网的机器从时速云Docker Registry下载所有镜像，然后上传到公司内部的Docker Registry，所有K8s nodes从公司Docker Registry上下载测试image，然后重新标签为GCR的测试image。
+为了避免下载测试镜像，给Kubemark性能测试的结果带来误差，在运行Kubemark前，需要在所有K8s nodes上提前准备好这些镜像。
+Kubemark测试时使用的image都是GCR上面的，需要通过能翻墙的机器下载相应的镜像到本地，然后重新标签并上传到公司内部的Docker Registry。所有K8s nodes从公司Docker Registry上下载测试image，然后重新标签为GCR的测试image。
 
-## Run Kubemark
+## Install Kubemark
 
-> The version of Kubernetes source code is **`V1.5.3`**.
+> The version of Kubernetes source code is **`v1.14.3`**.
+
+### Build Kubemark image
+
+1. 构建二进制文件
+
+	在 K8s 源码路径下构建 kubemark，生成的二进制文件在 `_output/bin` 目录下。
+
+	```shell
+	$ KUBE_BUILD_PLATFORMS=linux/amd64 make kubemark GOFLAGS=-v GOGCFLAGS="-N -l"
+	```
+
+2. 构建镜像
+
+	将生成的 kubemark 二进制文件从 `_output/bin` 复制到 [cluster/images/kubemark](https://github.com/kubernetes/kubernetes/tree/v1.14.3/cluster/images/kubemark) 目录下。
+	并在该目录下执行构建镜像命令，生成镜像：staging-k8s.gcr.io/kubemark:v1.14.3。
+
+	```shell
+	$ IMAGE_TAG=v1.14.3 make build
+	```
+
+### Create Hollow Nodes
+
+1. 创建 kubemark namespace
+
+	```shell
+	$ kubectl create ns kubemark
+	```
+
+2. 创建 kubemark 需要的 configmap
+
+	```shell
+	$ kubectl create configmap node-configmap -n kubemark --from-literal=content.type="test-cluster"
+	```
+
+3. 创建 kubeconfig secret
+
+	```shell
+	$ kubectl create secret generic kubeconfig --type=Opaque --namespace=kubemark --from-file=kubelet.kubeconfig={kubeconfig_file_path} --from-file=kubeproxy.kubeconfig={kubeconfig_file_path}
+	```
+
+	> `kubeconfig_file_path` 为 kubeconfig 文件路径，一般为 `/root/.kube/config`。
+
+4. 创建 hollow nodes
+
+	通过如下的 deployment 创建 hollow nodes，通过修改 `replicas` 可以调整模拟节点的数量。
+
+	```yaml
+	apiVersion: apps/v1
+	kind: Deployment
+	metadata:
+	name: hollow-node
+	namespace: kubemark
+	labels:
+		name: hollow-node
+	spec:
+	replicas: 1
+	selector:
+		matchLabels:
+		name: hollow-node
+	template:
+		metadata:
+		labels:
+			name: hollow-node
+		spec:
+		initContainers:
+		- name: init-inotify-limit
+			image: busybox
+			command: ['sysctl', '-w', 'fs.inotify.max_user_instances=200']
+			securityContext:
+			privileged: true
+		volumes:
+		- name: kubeconfig-volume
+			secret:
+			secretName: kubeconfig
+		containers:
+		- name: hollow-kubelet
+			image: supereagle/kubemark:v1.14.3
+			imagePullPolicy: IfNotPresent
+			ports:
+			- containerPort: 4194
+			- containerPort: 10250
+			- containerPort: 10255
+			env:
+			- name: CONTENT_TYPE
+			valueFrom:
+				configMapKeyRef:
+				name: node-configmap
+				key: content.type
+			- name: NODE_NAME
+			valueFrom:
+				fieldRef:
+				fieldPath: metadata.name
+			command:
+			- /bin/sh
+			- -c
+			- /kubemark --morph=kubelet --name=$(NODE_NAME) --kubeconfig=/kubeconfig/kubelet.kubeconfig $(CONTENT_TYPE) --alsologtostderr --v=2
+			volumeMounts:
+			- name: kubeconfig-volume
+			mountPath: /kubeconfig
+			readOnly: true
+			securityContext:
+			privileged: true
+		- name: hollow-proxy
+			image: supereagle/kubemark:v1.14.3
+			imagePullPolicy: IfNotPresent
+			env:
+			- name: CONTENT_TYPE
+			valueFrom:
+				configMapKeyRef:
+				name: node-configmap
+				key: content.type
+			- name: NODE_NAME
+			valueFrom:
+				fieldRef:
+				fieldPath: metadata.name
+			command:
+			- /bin/sh
+			- -c
+			- /kubemark --morph=proxy --name=$(NODE_NAME) --use-real-proxier=false --kubeconfig=/kubeconfig/kubeproxy.kubeconfig $(CONTENT_TYPE) --alsologtostderr --v=2
+			volumeMounts:
+			- name: kubeconfig-volume
+			mountPath: /kubeconfig
+			readOnly: true
+	```
+
+	> 如果 apiserver 的 `--admission-control` 中开启了 `PodSecurityPolicy`，需要先关闭 PSP admission，否则模拟节点的 pod 会因为 privileged 的安全问题创建失败。
+
+## Run Kubemark(Deprecated)
+
+> The version of Kubernetes source code is **`v1.5.3`**.
 
 1. Git clone K8s源码
 
