@@ -25,7 +25,7 @@ github_username:    supereagle
 highlighter: rouge
 permalink: pretty
 paginate: 10
-exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md"]
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md","_posts/archives"]
 anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
 
 
